@@ -5,7 +5,7 @@ export const saveMeeting = async (req, res) => {
         const payload = req.body?.payload;
 
         if (!payload || !payload.object) return res.status(400).json({ error: 'Payload inválido' });
-        
+
         const meeting = Meeting.fromZoomPayload(payload);
         await meeting.save();
 
@@ -38,6 +38,41 @@ export const getAllMeetings = async (_req, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Ocurrió un error al obtener las reuniones',
+            error: error.message,
+        });
+    }
+};
+
+export const getMeetingById = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'ID de la reunión no proporcionado',
+            });
+        }
+
+        const meeting = await Meeting.getById(id);
+
+        if (!meeting) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Reunión obtenida exitosamente',
+            data: meeting,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener la reunión por ID:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al obtener la reunión',
             error: error.message,
         });
     }
