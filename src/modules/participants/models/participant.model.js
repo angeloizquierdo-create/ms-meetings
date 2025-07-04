@@ -17,7 +17,7 @@ class Participant {
         this.user_name = user_name || null;
         this.email = email || null;
         this.join_time = join_time;
-        this.is_host = is_host === 'true';
+        this.is_host = is_host;
         this.host_id = host_id;
         this.meeting_id = meeting_id;
         this.meeting_uuid = meeting_uuid;
@@ -65,7 +65,7 @@ class Participant {
 
     static async getAllHosts() {
         const snapshot = await Participant.collection()
-            .where('is_hot', '==', true)
+            .where('is_host', '==', true)
             .get();
 
         const hosts = [];
@@ -78,7 +78,7 @@ class Participant {
 
     static async getAllParticipants() {
         const snapshot = await Participant.collection()
-            .where('is_hot', '==', false)
+            .where('is_host', '==', false)
             .get();
 
         const participants = [];
