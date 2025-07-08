@@ -10,6 +10,7 @@ class Meeting {
         duration,
         host_id,
         host_email,
+        score = null,
     }) {
         this.meeting_id = meeting_id;
         this.uuid = uuid;
@@ -19,6 +20,7 @@ class Meeting {
         this.duration = duration;
         this.host_id = host_id;
         this.host_email = host_email;
+        this.score = score || null;
     }
 
     static collection() {
