@@ -10,7 +10,6 @@ class Meeting {
         duration,
         host_id,
         host_email,
-        score = null,
         summary = null,
     }) {
         this.meeting_id = meeting_id;
@@ -21,7 +20,6 @@ class Meeting {
         this.duration = duration;
         this.host_id = host_id;
         this.host_email = host_email;
-        this.score = score || null;
         this.summary = summary || null;
     }
 
@@ -41,7 +39,6 @@ class Meeting {
             duration: obj?.duration,
             host_id: obj?.host_id,
             host_email: obj?.host_email,
-            score: obj?.score || null,
             summary: obj?.summary || null,
         });
     }
@@ -49,6 +46,18 @@ class Meeting {
     static async getById(id) {
         const doc = await Meeting.collection().doc(id).get();
         if (!doc.exists) return null;
+        return new Meeting({ id: doc.id, ...doc.data() });
+    }
+
+    static async getByMeetingId(meetingId) {
+        const snapshot = await Meeting.collection()
+            .where('meeting_id', '==', meetingId)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) return null;
+
+        const doc = snapshot.docs[0];
         return new Meeting({ id: doc.id, ...doc.data() });
     }
 

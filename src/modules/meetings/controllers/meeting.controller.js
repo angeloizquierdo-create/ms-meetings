@@ -77,3 +77,39 @@ export const getMeetingById = async (req, res) => {
         });
     }
 };
+
+export const getMeetingByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+
+        if (!meeting_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'meeting_id no proporcionado',
+            });
+        }
+
+        const meeting = await Meeting.getByMeetingId(Number(meeting_id));
+
+        if (!meeting) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada con ese meeting_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Reunión obtenida exitosamente por meeting_id',
+            data: meeting,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener la reunión por meeting_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al obtener la reunión',
+            error: error.message,
+        });
+    }
+};
+
