@@ -11,6 +11,7 @@ class Meeting {
         host_id,
         host_email,
         score = null,
+        summary = null,
     }) {
         this.meeting_id = meeting_id;
         this.uuid = uuid;
@@ -21,6 +22,7 @@ class Meeting {
         this.host_id = host_id;
         this.host_email = host_email;
         this.score = score || null;
+        this.summary = summary || null;
     }
 
     static collection() {
@@ -39,6 +41,8 @@ class Meeting {
             duration: obj?.duration,
             host_id: obj?.host_id,
             host_email: obj?.host_email,
+            score: obj?.score || null,
+            summary: obj?.summary || null,
         });
     }
 
