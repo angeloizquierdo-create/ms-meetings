@@ -7,6 +7,7 @@ class Meeting {
         uuid,
         topic,
         start_time,
+        join_url,
         status,
         duration,
         host_id,
@@ -19,6 +20,7 @@ class Meeting {
         this.uuid = uuid;
         this.topic = topic;
         this.start_time = start_time;
+        this.join_url = join_url || null;
         this.status = status;
         this.duration = duration;
         this.host_id = host_id;
@@ -40,6 +42,7 @@ class Meeting {
             uuid: obj?.uuid,
             topic: obj?.topic,
             start_time: obj?.start_time,
+            join_url: obj?.join_url,
             status: obj?.status,
             duration: obj?.duration,
             host_id: obj?.host_id,
@@ -118,6 +121,20 @@ class Meeting {
         const snapshot = await Meeting.collection().get();
         const meetings = [];
 
+        snapshot.forEach(doc => {
+            meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
+        });
+
+        return meetings;
+    }
+
+    static async getLastMeetings(limit = 20) {
+        const snapshot = await Meeting.collection()
+            .orderBy('start_time', 'desc')
+            .limit(limit)
+            .get();
+
+        const meetings = [];
         snapshot.forEach(doc => {
             meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
         });

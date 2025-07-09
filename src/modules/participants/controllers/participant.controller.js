@@ -1,6 +1,6 @@
 import Participant from '../models/participant.model.js';
 import Meeting from '../../meetings/models/meeting.model.js';
-import { parseDate } from '../utils/parseDate.js';
+import { parseDate } from '../../shared/utils/parseDate.js';
 
 export const saveParticipant = async (req, res) => {
     try {

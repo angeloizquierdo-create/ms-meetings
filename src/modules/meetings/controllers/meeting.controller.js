@@ -1,4 +1,5 @@
 import Meeting from '../models/meeting.model.js';
+import { parseDate } from '../../shared/utils/parseDate.js';
 
 export const saveMeeting = async (req, res) => {
     try {
@@ -116,6 +117,51 @@ export const getAllMeetings = async (_req, res) => {
         });
     }
 };
+
+export const getMeetingsGroupedByStatus = async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 20;
+        const rawMeetings = await Meeting.getLastMeetings(limit);
+
+        const now = new Date();
+        const grouped = {
+            pending: [],
+            started: [],
+            finished: [],
+            not_open: [],
+        };
+
+        for (const meeting of rawMeetings) {
+            const startTime = parseDate(meeting.start_time);
+
+            if (meeting.status === 'pending') {
+                if (startTime > now) {
+                    grouped.pending.push(meeting);
+                } else {
+                    grouped.not_open.push(meeting);
+                }
+            } else if (meeting.status === 'started') {
+                grouped.started.push(meeting);
+            } else if (meeting.status === 'finished') {
+                grouped.finished.push(meeting);
+            }
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Últimas ${limit} reuniones agrupadas correctamente`,
+            data: grouped,
+        });
+    } catch (error) {
+        console.error('🔥 Error al agrupar reuniones:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al agrupar reuniones',
+            error: error.message,
+        });
+    }
+};
+
 
 export const getMeetingById = async (req, res) => {
     try {

@@ -7,11 +7,13 @@ import {
     getGroupedDelays,
     getTopDelayedHosts,
     updateMeetingStatusById,
-    updateMeetingSummaryById
+    updateMeetingSummaryById,
+    getMeetingsGroupedByStatus
 } from '../controllers/meeting.controller.js';
 
 const MeetingRouter = Router();
 
+MeetingRouter.get('/last', getMeetingsGroupedByStatus);
 MeetingRouter.get('/grouped-delays', getGroupedDelays);
 MeetingRouter.get('/top-delayed-hosts', getTopDelayedHosts);
 MeetingRouter.post('/save', saveMeeting);
