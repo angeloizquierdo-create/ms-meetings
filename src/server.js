@@ -3,6 +3,7 @@ import morgan from 'morgan';
 import corsMiddleware from './middleware/cors.js';
 import MeetingRouter from './modules/meetings/routes/meeting.route.js';
 import ParticipantRouter from './modules/participants/routes/participant.route.js';
+import RatingRouter from './modules/ratings/routers/rating.router.js';
 
 class Server {
     constructor() {
@@ -11,6 +12,7 @@ class Server {
 
         this.meeting_path = '/ms/v1/meeting';
         this.participant_path = '/ms/v1/participant';
+        this.rating_path = '/ms/v1/rating';
 
         this.middlewares();
         this.routes();
@@ -25,6 +27,7 @@ class Server {
     routes() {
         this.app.use(this.meeting_path, MeetingRouter);
         this.app.use(this.participant_path, ParticipantRouter);
+        this.app.use(this.rating_path, RatingRouter);
     }
 
     listen() {

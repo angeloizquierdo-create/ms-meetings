@@ -88,6 +88,19 @@ class Participant {
 
         return participants;
     }
+
+    static async getHostByHostId(hostId) {
+        const snapshot = await Participant.collection()
+            .where('is_host', '==', true)
+            .where('host_id', '==', hostId)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) return null;
+
+        const doc = snapshot.docs[0];
+        return new Participant({ id: doc.id, ...doc.data() });
+    }
 }
 
 export default Participant;

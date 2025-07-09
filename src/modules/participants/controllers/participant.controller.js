@@ -63,3 +63,39 @@ export const getAllHosts = async (_req, res) => {
         });
     }
 };
+
+export const getHostByHostId = async (req, res) => {
+    try {
+        const { host_id } = req.params;
+
+        if (!host_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'host_id no proporcionado',
+            });
+        }
+
+        const host = await Participant.getHostByHostId(host_id);
+
+        if (!host) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'No se encontró un anfitrión con ese host_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Anfitrión obtenido exitosamente',
+            data: host,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener anfitrión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener anfitrión',
+            error: error.message,
+        });
+    }
+};
+

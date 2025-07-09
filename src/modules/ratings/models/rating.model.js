@@ -1,4 +1,4 @@
-import db from "../../../config/firebase/firebase";
+import db from "../../../config/firebase/firebase.js";
 
 class Rating {
     constructor({
@@ -22,6 +22,21 @@ class Rating {
             score: payload?.score || null,
         });
     }
+
+    async save() {
+        const dataToSave = { ...this };
+        delete dataToSave.id;
+
+        if (this.id) {
+            await Rating.collection().doc(this.id).set(dataToSave);
+        } else {
+            const docRef = await Rating.collection().add(dataToSave);
+            this.id = docRef.id;
+        }
+
+        return this;
+    }
+
 }
 
 export default Rating;
