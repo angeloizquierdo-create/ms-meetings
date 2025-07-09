@@ -10,6 +10,8 @@ class Meeting {
         duration,
         host_id,
         host_email,
+        delay = false,
+        delay_min = 0,
         summary = null,
     }) {
         this.meeting_id = meeting_id;
@@ -20,7 +22,9 @@ class Meeting {
         this.duration = duration;
         this.host_id = host_id;
         this.host_email = host_email;
-        this.summary = summary || null;
+        this.delay = delay || false; 
+        this.delay_min = delay_min || 0;
+        this.summary = summary;
     }
 
     static collection() {
@@ -84,6 +88,24 @@ class Meeting {
         });
 
         return meetings;
+    }
+
+    static async updateDelayByMeetingId(meetingId, delay, delay_min) {
+        const snapshot = await Meeting.collection()
+            .where('meeting_id', '==', meetingId)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) return null;
+
+        const doc = snapshot.docs[0];
+
+        await Meeting.collection().doc(doc.id).update({
+            delay,
+            delay_min,
+        });
+
+        return { id: doc.id, delay, delay_min };
     }
 }
 

@@ -1,4 +1,6 @@
 import Participant from '../models/participant.model.js';
+import Meeting from '../../meetings/models/meeting.model.js';
+import { parseDate } from '../utils/parseDate.js';
 
 export const saveParticipant = async (req, res) => {
     try {
@@ -10,6 +12,29 @@ export const saveParticipant = async (req, res) => {
 
         const participant = Participant.fromZoomPayload(payload);
         await participant.save();
+
+        if (participant.is_host) {
+            const { meeting_id, join_time } = participant;
+
+            const meeting = await Meeting.getByMeetingId(Number(meeting_id));
+            if (!meeting) {
+                console.warn(`⚠️ Reunión no encontrada para meeting_id: ${meeting_id}`);
+            } else if(meeting.delay) {
+                console.log('✅ Reunión ya marcada como con delay, no se actualiza nuevamente');
+            } else {
+                const joinTime = parseDate(join_time);
+                const startTime = parseDate(meeting.start_time);
+
+                const delayInMin = Math.floor((joinTime - startTime) / 60000);
+
+                if (delayInMin > 5) {
+                    await Meeting.updateDelayByMeetingId(Number(meeting_id), true, delayInMin);
+                    console.log(`🚨 Host tardó ${delayInMin} min en ingresar. Marcado como delay.`);
+                } else {
+                    console.log('✅ Host ingresó a tiempo');
+                }
+            }
+        }
 
         return res.status(201).json({
             status: 'ok',
