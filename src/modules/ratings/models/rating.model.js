@@ -1,4 +1,5 @@
 import db from "../../../config/firebase/firebase.js";
+import Participant from "../../participants/models/participant.model.js";
 
 class Rating {
     constructor({
@@ -37,6 +38,73 @@ class Rating {
         return this;
     }
 
+    static async getAllByHostId(hostId) {
+        const snapshot = await Rating.collection()
+            .where('host_id', '==', hostId)
+            .get();
+
+        const ratings = [];
+        snapshot.forEach(doc => {
+            ratings.push(new Rating({ id: doc.id, ...doc.data() }));
+        });
+
+        return ratings;
+    }
+
+    static async getGroupedRatingsByHostId() {
+        const snapshot = await Rating.collection().get();
+        const ratingsMap = new Map();
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const { host_id, score } = data;
+
+            if (!ratingsMap.has(host_id)) {
+                ratingsMap.set(host_id, {
+                    host_id,
+                    total: 0,
+                    count: 0,
+                });
+            }
+
+            const current = ratingsMap.get(host_id);
+            current.total += score || 0;
+            current.count += 1;
+        });
+
+        const grouped = await Promise.all(
+            Array.from(ratingsMap.values()).map(async ({ host_id, total, count }) => {
+                let user_name = null;
+                let email = null;
+
+                const host = await Participant.getHostByHostId(host_id);
+                if (host) {
+                    user_name = host.user_name || null;
+                    email = host.email || null;
+                }
+
+                return {
+                    host_id,
+                    user_name,
+                    email,
+                    score_avg: parseFloat((total / count).toFixed(2)),
+                    total_ratings: count,
+                };
+            })
+        );
+
+        return grouped;
+    }
+
+    static async getTopRatedHosts(limit = 5) {
+        const allGrouped = await Rating.getGroupedRatingsByHostId();
+
+        const sorted = allGrouped
+            .sort((a, b) => b.score_avg - a.score_avg)
+            .slice(0, limit);
+
+        return sorted;
+    }
 }
 
 export default Rating;

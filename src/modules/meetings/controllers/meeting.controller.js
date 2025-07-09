@@ -24,6 +24,80 @@ export const saveMeeting = async (req, res) => {
     }
 };
 
+export const updateMeetingStatusById = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+        const { status } = req.body;
+
+        if (!meeting_id || !status) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'meeting_id y status son requeridos',
+            });
+        }
+
+        const updated = await Meeting.updateStatusByMeetingId(Number(meeting_id), status);
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Estado de reunión actualizado correctamente',
+            data: updated,
+        });
+    } catch (error) {
+        console.error('🔥 Error al actualizar status de reunión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al actualizar status',
+            error: error.message,
+        });
+    }
+};
+
+export const updateMeetingSummaryById = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+        const { summary } = req.body;
+
+        console.log('Updating summary for meeting_id:', meeting_id, 'with summary:', summary);
+
+        if (!meeting_id || typeof summary !== 'string') {
+            return res.status(400).json({
+                status: 'error',
+                message: 'meeting_id y summary son requeridos',
+            });
+        }
+
+        const updated = await Meeting.updateSummaryByMeetingId(Number(meeting_id), summary);
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Resumen actualizado correctamente',
+            data: updated,
+        });
+    } catch (error) {
+        console.error('🔥 Error al actualizar summary de reunión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al actualizar summary',
+            error: error.message,
+        });
+    }
+};
+
 export const getAllMeetings = async (_req, res) => {
     try {
         const meetings = await Meeting.getAll();
@@ -112,4 +186,43 @@ export const getMeetingByMeetingId = async (req, res) => {
         });
     }
 };
+
+export const getGroupedDelays = async (_req, res) => {
+    try {
+        const data = await Meeting.getGroupedDelaysByHostId();
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Tardanzas agrupadas por host obtenidas correctamente',
+            data,
+        });
+    } catch (error) {
+        console.error('🔥 Error al agrupar tardanzas por host:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener la información de tardanza',
+            error: error.message,
+        });
+    }
+};
+
+export const getTopDelayedHosts = async (req, res) => {
+    try {
+        const topDelayedHosts = await Meeting.getTopDelayedHosts();
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Top de hosts con más tardanzas obtenido correctamente',
+            data: topDelayedHosts,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener top de hosts con tardanza:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener el top de tardanzas',
+            error: error.message,
+        });
+    }
+};
+
 
