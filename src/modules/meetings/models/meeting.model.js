@@ -5,7 +5,7 @@ class Meeting {
         meeting_id,
         uuid,
         topic,
-        startTime,
+        start_time,
         status,
         duration,
         host_id,
@@ -15,7 +15,7 @@ class Meeting {
         this.meeting_id = meeting_id;
         this.uuid = uuid;
         this.topic = topic;
-        this.start_time = startTime;
+        this.start_time = start_time;
         this.status = status;
         this.duration = duration;
         this.host_id = host_id;
@@ -34,7 +34,7 @@ class Meeting {
             meeting_id: obj?.id,
             uuid: obj?.uuid,
             topic: obj?.topic,
-            startTime: obj?.start_time,
+            start_time: obj?.start_time,
             status: obj?.status,
             duration: obj?.duration,
             host_id: obj?.host_id,
