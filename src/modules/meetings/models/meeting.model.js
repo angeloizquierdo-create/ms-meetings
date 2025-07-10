@@ -1,5 +1,6 @@
 import db from '../../../config/firebase/firebase.js';
 import Participant from '../../participants/models/participant.model.js';
+import { parseDate } from '../../shared/utils/parseDate.js';
 
 class Meeting {
     constructor({
@@ -142,6 +143,33 @@ class Meeting {
         return meetings;
     }
 
+    static async getTodayMeetings() {
+        const snapshot = await Meeting.collection()
+            .orderBy('start_time', 'desc')
+            .get(); // no le pongas limit si quieres filtrar antes
+
+        const meetings = [];
+
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const startTime = parseDate(data.start_time); // convierte a objeto Date
+
+            if (startTime) {
+                const meetingDateStr = startTime.toISOString().split('T')[0]; // YYYY-MM-DD
+                if (meetingDateStr === todayStr) {
+                    meetings.push(new Meeting({ id: doc.id, ...data }));
+                }
+            }
+        });
+
+        return meetings;
+    }
     static async updateDelayByMeetingId(meetingId, delay, delay_min) {
         const snapshot = await Meeting.collection()
             .where('meeting_id', '==', meetingId)

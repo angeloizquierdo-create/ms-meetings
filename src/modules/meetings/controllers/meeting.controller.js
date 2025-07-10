@@ -136,6 +136,9 @@ export const getMeetingsGroupedByStatus = async (req, res) => {
 
             if (meeting.status === 'pending') {
                 if (startTime > now) {
+                    
+                    console.log("startime", startTime);
+                    console.log("now", now);
                     grouped.pending.push(meeting);
                 } else {
                     grouped.not_open.push(meeting);
@@ -162,6 +165,48 @@ export const getMeetingsGroupedByStatus = async (req, res) => {
     }
 };
 
+export const getTodayMeetingsGroupedByStatus = async (req, res) => {
+    try {
+        const rawMeetings = await Meeting.getTodayMeetings();
+
+        const now = new Date();
+        const grouped = {
+            pending: [],
+            started: [],
+            finished: [],
+            not_open: [],
+        };
+
+        for (const meeting of rawMeetings) {
+            const startTime = parseDate(meeting.start_time);
+
+            if (meeting.status === 'pending') {
+                if (startTime > now) {
+                    grouped.pending.push(meeting);
+                } else {
+                    grouped.not_open.push(meeting);
+                }
+            } else if (meeting.status === 'started') {
+                grouped.started.push(meeting);
+            } else if (meeting.status === 'finished') {
+                grouped.finished.push(meeting);
+            }
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Reuniones de hoy agrupadas correctamente',
+            data: grouped,
+        });
+    } catch (error) {
+        console.error('🔥 Error al agrupar reuniones de hoy:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al agrupar reuniones de hoy',
+            error: error.message,
+        });
+    }
+};
 
 export const getMeetingById = async (req, res) => {
     try {
