@@ -1,4 +1,6 @@
 import Participant from '../models/participant.model.js';
+import Meeting from '../../meetings/models/meeting.model.js';
+import { parseDate } from '../../shared/utils/parseDate.js';
 
 export const saveParticipant = async (req, res) => {
     try {
@@ -10,6 +12,29 @@ export const saveParticipant = async (req, res) => {
 
         const participant = Participant.fromZoomPayload(payload);
         await participant.save();
+
+        if (participant.is_host) {
+            const { meeting_id, join_time } = participant;
+
+            const meeting = await Meeting.getByMeetingId(Number(meeting_id));
+            if (!meeting) {
+                console.warn(`⚠️ Reunión no encontrada para meeting_id: ${meeting_id}`);
+            } else if(meeting.delay) {
+                console.log('✅ Reunión ya marcada como con delay, no se actualiza nuevamente');
+            } else {
+                const joinTime = parseDate(join_time);
+                const startTime = parseDate(meeting.start_time);
+
+                const delayInMin = Math.floor((joinTime - startTime) / 60000);
+
+                if (delayInMin > 5) {
+                    await Meeting.updateDelayByMeetingId(Number(meeting_id), true, delayInMin);
+                    console.log(`🚨 Host tardó ${delayInMin} min en ingresar. Marcado como delay.`);
+                } else {
+                    console.log('✅ Host ingresó a tiempo');
+                }
+            }
+        }
 
         return res.status(201).json({
             status: 'ok',
@@ -63,3 +88,39 @@ export const getAllHosts = async (_req, res) => {
         });
     }
 };
+
+export const getHostByHostId = async (req, res) => {
+    try {
+        const { host_id } = req.params;
+
+        if (!host_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'host_id no proporcionado',
+            });
+        }
+
+        const host = await Participant.getHostByHostId(host_id);
+
+        if (!host) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'No se encontró un anfitrión con ese host_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Anfitrión obtenido exitosamente',
+            data: host,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener anfitrión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener anfitrión',
+            error: error.message,
+        });
+    }
+};
+
