@@ -1,7 +1,13 @@
 # Imagen base oficial de Node.js
 FROM node:20
 
-# Establecer directorio de trabajo dentro del contenedor
+# Instala tzdata para configurar zona horaria
+RUN apt-get update && apt-get install -y tzdata
+
+# Configura la zona horaria a Lima
+ENV TZ=America/Lima
+
+# Establecer directorio de trabajo
 WORKDIR /app
 
 # Copiar archivos
@@ -11,8 +17,8 @@ COPY . .
 # Instalar dependencias
 RUN npm install
 
-# Exponer el puerto configurado en .env
+# Exponer el puerto
 EXPOSE 3000
 
-# Comando para iniciar la app
+# Iniciar la app
 CMD ["node", "index.js"]
