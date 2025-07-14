@@ -89,6 +89,20 @@ class Participant {
         return participants;
     }
 
+    static async getAllParticipantsByMeetingId(meeting_id) {
+        const snapshot = await Participant.collection()
+            .where('is_host', '==', false)
+            .where('meeting_id', '==', meeting_id)
+            .get();
+
+        const participants = [];
+        snapshot.forEach(doc => {
+            participants.push(new Participant({ id: doc.id, ...doc.data() }));
+        });
+
+        return participants;
+    }
+
     static async getHostByHostId(hostId) {
         const snapshot = await Participant.collection()
             .where('is_host', '==', true)

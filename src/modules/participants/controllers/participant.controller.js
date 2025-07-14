@@ -19,7 +19,7 @@ export const saveParticipant = async (req, res) => {
             const meeting = await Meeting.getByMeetingId(Number(meeting_id));
             if (!meeting) {
                 console.warn(`⚠️ Reunión no encontrada para meeting_id: ${meeting_id}`);
-            } else if(meeting.delay) {
+            } else if (meeting.delay) {
                 console.log('✅ Reunión ya marcada como con delay, no se actualiza nuevamente');
             } else {
                 const joinTime = parseDate(join_time);
@@ -67,6 +67,23 @@ export const getAllParticipants = async (_req, res) => {
             message: 'Ocurrió un error al obtener los participantes',
             error: error.message,
         });
+    }
+};
+
+
+export const getParticipantsByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+
+        if (!meeting_id) {
+            return res.status(400).json({ error: 'meeting_id es requerido' });
+        }
+
+        const participants = await Participant.getAllParticipantsByMeetingId(meeting_id);
+        return res.json(participants);
+    } catch (error) {
+        console.error('Error al obtener participantes:', error);
+        return res.status(500).json({ error: 'Error al obtener participantes' });
     }
 };
 
