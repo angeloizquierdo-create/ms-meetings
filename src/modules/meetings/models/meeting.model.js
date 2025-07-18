@@ -146,7 +146,7 @@ class Meeting {
     static async getTodayMeetings() {
         const snapshot = await Meeting.collection()
             .orderBy('start_time', 'desc')
-            .get(); // no le pongas limit si quieres filtrar antes
+            .get();
 
         const meetings = [];
 

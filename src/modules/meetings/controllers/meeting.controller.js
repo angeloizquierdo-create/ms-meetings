@@ -136,7 +136,7 @@ export const getMeetingsGroupedByStatus = async (req, res) => {
 
             if (meeting.status === 'pending') {
                 if (startTime > now) {
-                    
+
                     console.log("startime", startTime);
                     console.log("now", now);
                     grouped.pending.push(meeting);
@@ -179,6 +179,11 @@ export const getTodayMeetingsGroupedByStatus = async (req, res) => {
 
         for (const meeting of rawMeetings) {
             const startTime = parseDate(meeting.start_time);
+
+            if (!startTime) {
+                console.warn(`⛔ start_time inválido para meeting_id ${meeting.meeting_id}: ${meeting.start_time}`);
+                continue; 
+            }
 
             if (meeting.status === 'pending') {
                 if (startTime > now) {
