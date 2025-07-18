@@ -51,6 +51,27 @@ class Rating {
         return ratings;
     }
 
+    static async getGlobalAverageScore() {
+        const snapshot = await Rating.collection().get();
+
+        let totalScore = 0;
+        let count = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (typeof data.score === 'number') {
+                totalScore += data.score;
+                count += 1;
+            }
+        });
+
+        if (count === 0) return null;
+
+        const average = totalScore / count;
+        return parseFloat(average.toFixed(2));
+    }
+
+
     static async getGroupedRatingsByHostId() {
         const snapshot = await Rating.collection().get();
         const ratingsMap = new Map();

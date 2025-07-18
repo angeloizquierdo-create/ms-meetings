@@ -79,6 +79,27 @@ export const getRatingsByHostId = async (req, res) => {
     }
 };
 
+export const getGlobalAverageScore = async (_req, res) => {
+    try {
+        const average = await Rating.getGlobalAverageScore();
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Promedio global de ratings obtenido correctamente',
+            data: {
+                score_avg: average,
+            },
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener el promedio global:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener el promedio global',
+            error: error.message,
+        });
+    }
+};
+
 export const getAllRatingsGrouped = async (_req, res) => {
     try {
         const groupedRatings = await Rating.getGroupedRatingsByHostId();
