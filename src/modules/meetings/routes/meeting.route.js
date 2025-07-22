@@ -25,4 +25,5 @@ MeetingRouter.patch('/status/:meeting_id', updateMeetingStatusById);
 MeetingRouter.get('/:id', getMeetingById);
 MeetingRouter.get('/by-meeting-id/:meeting_id', getMeetingByMeetingId);
 
+// TODO: OBTENER REUNIONES POR HOST_ID
 export default MeetingRouter;
