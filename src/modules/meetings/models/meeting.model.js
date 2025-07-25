@@ -237,7 +237,7 @@ class Meeting {
         return enriched;
     }
 
-    static async getTopDelayedHosts(limit = 5) {
+    static async getTopDelayedHosts(limit) {
         const snapshot = await Meeting.collection()
             .where('delay', '==', true)
             .get();
@@ -283,11 +283,13 @@ class Meeting {
             })
         );
 
-        // Ordenar por cantidad de tardanzas (desc) y limitar al top 5
-        return enriched
-            .sort((a, b) => b.amount_delay - a.amount_delay)
-            .slice(0, limit);
+        // Ordenar por cantidad de tardanzas (desc)
+        const sorted = enriched.sort((a, b) => b.amount_delay - a.amount_delay);
+
+        // Si se pasa un limit, se aplica, si no, devuelve todo
+        return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
     }
+
 
 }
 

@@ -302,9 +302,11 @@ export const getGroupedDelays = async (_req, res) => {
     }
 };
 
-export const getTopDelayedHosts = async (req, res) => {
+
+// replicar est metodo para la seccion de monitoreo
+export const getTopDelayedHosts = async (_, res) => {
     try {
-        const topDelayedHosts = await Meeting.getTopDelayedHosts();
+        const topDelayedHosts = await Meeting.getTopDelayedHosts(5);
 
         return res.status(200).json({
             status: 'ok',
