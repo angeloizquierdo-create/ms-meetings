@@ -1,4 +1,6 @@
 import Meeting from '../models/meeting.model.js';
+import Participant from '../../participants/models/participant.model.js';
+import Rating from '../../ratings/models/rating.model.js';
 import { parseDate } from '../../shared/utils/parseDate.js';
 
 export const saveMeeting = async (req, res) => {
@@ -182,7 +184,7 @@ export const getTodayMeetingsGroupedByStatus = async (req, res) => {
 
             if (!startTime) {
                 console.warn(`⛔ start_time inválido para meeting_id ${meeting.meeting_id}: ${meeting.start_time}`);
-                continue; 
+                continue;
             }
 
             if (meeting.status === 'pending') {
@@ -302,9 +304,9 @@ export const getGroupedDelays = async (_req, res) => {
     }
 };
 
-export const getTopDelayedHosts = async (req, res) => {
+export const getTopDelayedHosts = async (_, res) => {
     try {
-        const topDelayedHosts = await Meeting.getTopDelayedHosts();
+        const topDelayedHosts = await Meeting.getTopDelayedHosts(5);
 
         return res.status(200).json({
             status: 'ok',
@@ -316,6 +318,82 @@ export const getTopDelayedHosts = async (req, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Error interno al obtener el top de tardanzas',
+            error: error.message,
+        });
+    }
+};
+
+export const getHostsMoreInfo = async (_, res) => {
+    try {
+        const data = await Meeting.getHostsMoreInfo();
+
+        return res.status(200).json({
+            status: 'ok',
+            data,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener top de hosts con tardanza:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener el top de tardanzas',
+            error: error.message,
+        });
+    }
+};
+
+export const getMeetingsByHostId = async (req, res) => {
+    try {
+        const { host_id } = req.params;
+
+        if (!host_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'host_id no proporcionado',
+            });
+        }
+
+        // Traer todas las reuniones
+        const meetings = await Meeting.getAllByHostId(host_id);
+
+        if (!meetings.length) {
+            return res.status(200).json({
+                status: 'ok',
+                message: 'No se encontraron reuniones para este host',
+                data: [],
+            });
+        }
+
+        // Enriquecer reuniones con el número de participantes y el promedio de score
+        const enrichedMeetings = await Promise.all(
+            meetings.map(async (meeting) => {
+                // participantes
+                const participants = await Participant.getAllParticipantsByMeetingId(
+                    String(meeting.meeting_id)
+                );
+
+                // promedio de score
+                const score = await Rating.getAverageByMeetingId(
+                    String(meeting.meeting_id)
+                );
+
+                return {
+                    ...meeting,
+                    num_participants: participants.length,
+                    score: score ?? null, // null si no hay ratings
+                };
+            })
+        );
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Reuniones del host ${host_id} obtenidas correctamente`,
+            data: enrichedMeetings,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener reuniones por host_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener las reuniones',
             error: error.message,
         });
     }
