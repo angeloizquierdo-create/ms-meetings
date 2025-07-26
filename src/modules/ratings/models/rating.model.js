@@ -71,7 +71,6 @@ class Rating {
         return parseFloat(average.toFixed(2));
     }
 
-
     static async getGroupedRatingsByHostId() {
         const snapshot = await Rating.collection().get();
         const ratingsMap = new Map();
@@ -117,14 +116,36 @@ class Rating {
         return grouped;
     }
 
-    static async getTopRatedHosts(limit = 5) {
+    static async getTopRatedHosts(limit) {
         const allGrouped = await Rating.getGroupedRatingsByHostId();
 
-        const sorted = allGrouped
-            .sort((a, b) => b.score_avg - a.score_avg)
-            .slice(0, limit);
+        const sorted = allGrouped.sort((a, b) => b.score_avg - a.score_avg);
 
-        return sorted;
+        return limit ? sorted.slice(0, limit) : sorted;
+    }
+
+    static async getAverageByMeetingId(meetingId) {
+        const snapshot = await Rating.collection()
+            .where('meeting_id', '==', meetingId)
+            .get();
+
+        if (snapshot.empty) return null;
+
+        let totalScore = 0;
+        let count = 0;
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (typeof data.score === 'number') {
+                totalScore += data.score;
+                count += 1;
+            }
+        });
+
+        if (count === 0) return null;
+
+        const average = totalScore / count;
+        return parseFloat(average.toFixed(2));
     }
 }
 

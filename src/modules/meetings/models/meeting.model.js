@@ -1,5 +1,6 @@
 import db from '../../../config/firebase/firebase.js';
 import Participant from '../../participants/models/participant.model.js';
+import Rating from '../../ratings/models/rating.model.js';
 import { parseDate } from '../../shared/utils/parseDate.js';
 
 class Meeting {
@@ -290,7 +291,86 @@ class Meeting {
         return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
     }
 
+    static async getAllByHostId(hostId) {
+        const snapshot = await Meeting.collection()
+            .where('host_id', '==', hostId)
+            .get();
 
+        const meetings = [];
+        snapshot.forEach(doc => {
+            meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
+        });
+
+        return meetings;
+    }
+
+    static async getHostsMoreInfo(limit) {
+        const snapshot = await Meeting.collection()
+            .where('delay', '==', true)
+            .get();
+
+        const delayMap = new Map();
+
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const { host_id, delay_min } = data;
+
+            if (!host_id) return;
+
+            if (!delayMap.has(host_id)) {
+                delayMap.set(host_id, {
+                    host_id,
+                    amount_delay: 0,
+                    amount_delay_min: 0,
+                });
+            }
+
+            const current = delayMap.get(host_id);
+            current.amount_delay += 1;
+            current.amount_delay_min += delay_min || 0;
+        });
+
+        // Enriquecer con nombre, email, num_reuniones y promedio de rating
+        const enriched = await Promise.all(
+            Array.from(delayMap.values()).map(async (item) => {
+                let user_name = null;
+                let email = null;
+                let num_reuniones = 0;
+                let average = 0;
+
+                // Nombre y email
+                const host = await Participant.getHostByHostId(item.host_id);
+                if (host) {
+                    user_name = host.user_name || null;
+                    email = host.email || null;
+                }
+
+                // Total reuniones
+                const reuniones = await Meeting.getAllByHostId(item.host_id);
+                num_reuniones = reuniones.length;
+
+                // Calcular promedio rating
+                const ratings = await Rating.getAllByHostId(item.host_id);
+                if (ratings.length) {
+                    const total = ratings.reduce((acc, r) => acc + (r.score || 0), 0);
+                    average = parseFloat((total / ratings.length).toFixed(2));
+                }
+
+                return {
+                    ...item,
+                    num_reuniones,
+                    average,
+                    user_name,
+                    email,
+                };
+            })
+        );
+
+        // Ordenar por cantidad de tardanzas (desc)
+        const sorted = enriched.sort((a, b) => b.amount_delay - a.amount_delay);
+
+        return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
+    }
 }
 
 export default Meeting;

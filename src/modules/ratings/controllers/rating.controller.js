@@ -1,5 +1,4 @@
 import Rating from '../models/rating.model.js';
-import Participant from '../../participants/models/participant.model.js';
 import { CreateRatingValidator } from '../validators/rating.validator.js';
 
 export const saveRating = async (req, res) => {
@@ -133,6 +132,68 @@ export const getTopRatedHosts = async (_req, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Error interno al obtener top docentes',
+            error: error.message,
+        });
+    }
+};
+
+export const getRatedHosts = async (_req, res) => {
+    try {
+        const topHosts = await Rating.getTopRatedHosts();
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Top docentes mejor calificados obtenidos correctamente',
+            data: topHosts,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener top docentes:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener top docentes',
+            error: error.message,
+        });
+    }
+};
+
+export const getAverageScoreByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+
+        if (!meeting_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'meeting_id no proporcionado',
+            });
+        }
+
+        // Llamar al método del modelo
+        const average = await Rating.getAverageByMeetingId(meeting_id);
+
+        if (average === null) {
+            return res.status(200).json({
+                status: 'ok',
+                message: `No hay ratings para la reunión ${meeting_id}`,
+                data: {
+                    meeting_id,
+                    average: null
+                }
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Promedio de ratings de la reunión ${meeting_id} obtenido correctamente`,
+            data: {
+                meeting_id,
+                average
+            }
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener promedio de ratings por meeting_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al obtener el promedio de ratings',
             error: error.message,
         });
     }
