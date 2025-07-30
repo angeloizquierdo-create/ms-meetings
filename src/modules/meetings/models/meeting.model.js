@@ -306,7 +306,6 @@ class Meeting {
 
     static async getHostsMoreInfo(limit) {
         const snapshot = await Meeting.collection()
-            .where('delay', '==', true)
             .get();
 
         const delayMap = new Map();
