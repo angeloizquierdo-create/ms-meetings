@@ -9,7 +9,8 @@ import UserRouter from './modules/users/routers/user.route.js';
 class Server {
     constructor() {
         this.app = express();
-        this.port = process.env.PORT;
+        // Usar el puerto de la variable de entorno o 3000 como fallback
+        this.port = process.env.PORT || 3000;
 
         this.meeting_path = '/ms/v1/meeting';
         this.participant_path = '/ms/v1/participant';
