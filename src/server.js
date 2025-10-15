@@ -28,6 +28,11 @@ class Server {
     }
 
     routes() {
+        // Ruta raíz para el Health Check de Render
+        this.app.get('/', (req, res) => {
+            res.status(200).json({ status: 'ok', message: 'API is alive!' });
+        });
+
         this.app.use(this.meeting_path, MeetingRouter);
         this.app.use(this.participant_path, ParticipantRouter);
         this.app.use(this.rating_path, RatingRouter);
