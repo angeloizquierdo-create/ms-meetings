@@ -17,6 +17,7 @@ class Meeting {
         delay = false,
         delay_min = 0,
         summary = null,
+        actualStartTime = null,
     }) {
         this.meeting_id = meeting_id;
         this.uuid = uuid;
@@ -30,6 +31,7 @@ class Meeting {
         this.delay = delay || false;
         this.delay_min = delay_min || 0;
         this.summary = summary;
+        this.actualStartTime = actualStartTime;
     }
 
     static collection() {
@@ -117,6 +119,22 @@ class Meeting {
         });
 
         return { id: doc.id, meeting_id, summary };
+    }
+
+    static async updateMeetingByMeetingId(meetingId, dataToUpdate) {
+        const snapshot = await Meeting.collection()
+            .where('meeting_id', '==', meetingId)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) {
+            return null;
+        }
+
+        const doc = snapshot.docs[0];
+        await Meeting.collection().doc(doc.id).update(dataToUpdate);
+
+        return { id: doc.id, ...dataToUpdate };
     }
 
     static async getAll() {
@@ -369,6 +387,22 @@ class Meeting {
         const sorted = enriched.sort((a, b) => b.amount_delay - a.amount_delay);
 
         return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
+    }
+
+    static async deleteByMeetingId(meetingId) {
+        const snapshot = await Meeting.collection()
+            .where('meeting_id', '==', meetingId)
+            .limit(1)
+            .get();
+
+        if (snapshot.empty) {
+            return null;
+        }
+
+        const doc = snapshot.docs[0];
+        await Meeting.collection().doc(doc.id).delete();
+
+        return { id: doc.id };
     }
 }
 

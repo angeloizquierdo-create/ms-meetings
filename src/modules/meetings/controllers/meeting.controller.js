@@ -27,6 +27,41 @@ export const saveMeeting = async (req, res) => {
     }
 };
 
+export const deleteMeetingByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+
+        if (!meeting_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'meeting_id no proporcionado',
+            });
+        }
+
+        const deleted = await Meeting.deleteByMeetingId(Number(meeting_id));
+
+        if (!deleted) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada con ese meeting_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Reunión eliminada exitosamente',
+            data: deleted,
+        });
+    } catch (error) {
+        console.error('🔥 Error al eliminar la reunión por meeting_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al eliminar la reunión',
+            error: error.message,
+        });
+    }
+};
+
 export const updateMeetingStatusById = async (req, res) => {
     try {
         const { meeting_id } = req.params;
@@ -58,6 +93,49 @@ export const updateMeetingStatusById = async (req, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Error interno al actualizar status',
+            error: error.message,
+        });
+    }
+};
+
+export const updateMeetingByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+        const dataToUpdate = req.body;
+
+        if (!meeting_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El meeting_id es requerido',
+            });
+        }
+
+        if (!dataToUpdate || Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'No se proporcionaron datos para actualizar',
+            });
+        }
+
+        const updated = await Meeting.updateMeetingByMeetingId(Number(meeting_id), dataToUpdate);
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada con ese meeting_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Reunión actualizada exitosamente',
+            data: updated,
+        });
+    } catch (error) {
+        console.error('🔥 Error al actualizar la reunión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al actualizar la reunión',
             error: error.message,
         });
     }
@@ -398,5 +476,3 @@ export const getMeetingsByHostId = async (req, res) => {
         });
     }
 };
-
-
