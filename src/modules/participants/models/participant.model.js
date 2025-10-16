@@ -2,6 +2,7 @@ import db from '../../../config/firebase/firebase.js';
 
 class Participant {
     constructor({
+        id, // Añadir id para poder instanciar con el id del documento
         user_id,
         participant_user_id,
         user_name,
@@ -12,6 +13,7 @@ class Participant {
         meeting_id,
         meeting_uuid,
     }) {
+        this.id = id;
         this.user_id = user_id;
         this.participant_user_id = participant_user_id || null;
         this.user_name = user_name || null;
@@ -29,18 +31,53 @@ class Participant {
 
     static fromZoomPayload(payload) {
         const obj = payload?.object;
+        const participant = obj?.participant;
 
         return new Participant({
-            user_id: obj?.user_id,
-            participant_user_id: obj?.participant_user_id,
-            user_name: obj?.user_name,
-            email: obj?.email,
-            join_time: obj?.join_time,
-            is_host: obj?.isHost,
+            user_id: participant?.user_id,
+            participant_user_id: participant?.participant_user_id,
+            user_name: participant?.user_name,
+            email: participant?.email,
+            join_time: participant?.join_time,
+            is_host: participant?.participant_user_id === obj?.host_id,
             host_id: obj?.host_id,
-            meeting_id: obj?.meeting_id,
-            meeting_uuid: obj?.meeting_uuid,
+            meeting_id: obj?.id,
+            meeting_uuid: obj?.uuid,
         });
+    }
+
+    static async findOrCreate(payload) {
+        const obj = payload?.object;
+        const participant = obj?.participant;
+        const meeting_id = obj?.id;
+        const participant_user_id = participant?.participant_user_id;
+
+        // Solo buscamos si el participant_user_id existe (es un usuario logueado de Zoom, no un invitado)
+        if (participant_user_id) {
+            const snapshot = await Participant.collection()
+                .where('meeting_id', '==', meeting_id)
+                .where('participant_user_id', '==', participant_user_id)
+                .limit(1)
+                .get();
+
+            if (!snapshot.empty) {
+                const doc = snapshot.docs[0];
+                console.log(`✅ Participante encontrado (ID: ${doc.id}), no se crea uno nuevo.`);
+                return {
+                    participant: new Participant({ id: doc.id, ...doc.data() }),
+                    created: false,
+                };
+            }
+        }
+
+        // Si no se encontró o es un invitado (sin participant_user_id), se crea uno nuevo.
+        console.log('✨ Participante no encontrado o es un invitado, creando uno nuevo.');
+        const newParticipant = Participant.fromZoomPayload(payload);
+        await newParticipant.save();
+        return {
+            participant: newParticipant,
+            created: true
+        };
     }
 
     static async getById(id) {
@@ -51,10 +88,18 @@ class Participant {
 
     async save() {
         const dataToSave = { ...this };
-        delete dataToSave.id;
+        delete dataToSave.id; // No guardar el id del documento dentro del documento
+
+        // Limpiar campos nulos o indefinidos antes de guardar
+        Object.keys(dataToSave).forEach(key => {
+            if (dataToSave[key] === undefined) {
+                delete dataToSave[key];
+            }
+        });
+
 
         if (this.id) {
-            await Participant.collection().doc(this.id).set(dataToSave);
+            await Participant.collection().doc(this.id).set(dataToSave, { merge: true });
         } else {
             const docRef = await Participant.collection().add(dataToSave);
             this.id = docRef.id;

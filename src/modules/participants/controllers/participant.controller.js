@@ -10,10 +10,12 @@ export const saveParticipant = async (req, res) => {
             return res.status(400).json({ error: 'Payload inválido' });
         }
 
-        const participant = Participant.fromZoomPayload(payload);
-        await participant.save();
+        // Usar el nuevo método findOrCreate
+        const { participant, created } = await Participant.findOrCreate(payload);
 
-        if (participant.is_host) {
+        // La lógica para verificar el retraso del host solo se ejecuta si el participante
+        // es el host y es la primera vez que se guarda (created === true).
+        if (participant.is_host && created) {
             const { meeting_id, join_time } = participant;
 
             const meeting = await Meeting.getByMeetingId(Number(meeting_id));
@@ -36,9 +38,13 @@ export const saveParticipant = async (req, res) => {
             }
         }
 
-        return res.status(201).json({
+        // Determinar el mensaje y el código de estado según si se creó o no
+        const message = created ? 'Participante guardado exitosamente' : 'El participante ya existía, no se realizaron cambios.';
+        const statusCode = created ? 201 : 200;
+
+        return res.status(statusCode).json({
             status: 'ok',
-            message: 'Participante guardado exitosamente',
+            message: message,
             data: participant,
         });
     } catch (error) {
@@ -140,4 +146,3 @@ export const getHostByHostId = async (req, res) => {
         });
     }
 };
-
