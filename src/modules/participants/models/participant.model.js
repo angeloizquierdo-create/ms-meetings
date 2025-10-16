@@ -30,17 +30,17 @@ class Participant {
     }
     
     static async findOrCreate(participantData) {
-        const { meeting_id, participant_user_id, email } = participantData;
+        const { meeting_id, user_id, email } = participantData;
 
         let existingParticipantQuery;
 
-        // Opción 1 (la más fiable): Buscar por ID de participante de Zoom.
-        if (participant_user_id) {
+        // Opción 1 (la más fiable): Buscar por ID de usuario de Zoom (la cuenta).
+        if (user_id) {
             existingParticipantQuery = Participant.collection()
                 .where('meeting_id', '==', meeting_id)
-                .where('participant_user_id', '==', participant_user_id);
+                .where('user_id', '==', user_id);
         }
-        // Opción 2 (para invitados): Buscar por email.
+        // Opción 2 (para invitados sin cuenta): Buscar por email.
         else if (email) {
             existingParticipantQuery = Participant.collection()
                 .where('meeting_id', '==', meeting_id)
@@ -53,7 +53,7 @@ class Participant {
 
             if (!snapshot.empty) {
                 const doc = snapshot.docs[0];
-                console.log(`✅ Participante encontrado por ID o email (ID: ${doc.id}), no se crea uno nuevo.`);
+                console.log(`✅ Participante encontrado por user_id o email (ID: ${doc.id}), no se crea uno nuevo.`);
                 return {
                     participant: new Participant({ id: doc.id, ...doc.data() }),
                     created: false,
@@ -62,7 +62,7 @@ class Participant {
         }
 
         // Si no se pudo identificar o si, tras buscar, no se encontró, se crea uno nuevo.
-        console.log('✨ Participante no encontrado, creando uno nuevo.');
+        console.log('✨ Participante no encontrado (o no identificable), creando uno nuevo.');
         const newParticipant = new Participant(participantData);
         await newParticipant.save();
         return {
