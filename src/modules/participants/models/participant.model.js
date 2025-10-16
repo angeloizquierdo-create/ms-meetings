@@ -2,7 +2,7 @@ import db from '../../../config/firebase/firebase.js';
 
 class Participant {
     constructor({
-        id, // Añadir id para poder instanciar con el id del documento
+        id,
         user_id,
         participant_user_id,
         user_name,
@@ -28,31 +28,11 @@ class Participant {
     static collection() {
         return db.collection('participantes');
     }
+    
+    static async findOrCreate(participantData) {
+        const { meeting_id, participant_user_id } = participantData;
 
-    static fromZoomPayload(payload) {
-        const obj = payload?.object;
-        const participant = obj?.participant;
-
-        return new Participant({
-            user_id: participant?.user_id,
-            participant_user_id: participant?.participant_user_id,
-            user_name: participant?.user_name,
-            email: participant?.email,
-            join_time: participant?.join_time,
-            is_host: participant?.participant_user_id === obj?.host_id,
-            host_id: obj?.host_id,
-            meeting_id: obj?.id,
-            meeting_uuid: obj?.uuid,
-        });
-    }
-
-    static async findOrCreate(payload) {
-        const obj = payload?.object;
-        const participant = obj?.participant;
-        const meeting_id = obj?.id;
-        const participant_user_id = participant?.participant_user_id;
-
-        // Solo buscamos si el participant_user_id existe (es un usuario logueado de Zoom, no un invitado)
+        // Si el participante tiene un ID de Zoom, buscamos si ya existe en esa reunión.
         if (participant_user_id) {
             const snapshot = await Participant.collection()
                 .where('meeting_id', '==', meeting_id)
@@ -70,9 +50,9 @@ class Participant {
             }
         }
 
-        // Si no se encontró o es un invitado (sin participant_user_id), se crea uno nuevo.
+        // Si no se encontró (o es un invitado sin participant_user_id), se crea uno nuevo.
         console.log('✨ Participante no encontrado o es un invitado, creando uno nuevo.');
-        const newParticipant = Participant.fromZoomPayload(payload);
+        const newParticipant = new Participant(participantData);
         await newParticipant.save();
         return {
             participant: newParticipant,
@@ -88,15 +68,13 @@ class Participant {
 
     async save() {
         const dataToSave = { ...this };
-        delete dataToSave.id; // No guardar el id del documento dentro del documento
+        delete dataToSave.id;
 
-        // Limpiar campos nulos o indefinidos antes de guardar
         Object.keys(dataToSave).forEach(key => {
             if (dataToSave[key] === undefined) {
                 delete dataToSave[key];
             }
         });
-
 
         if (this.id) {
             await Participant.collection().doc(this.id).set(dataToSave, { merge: true });

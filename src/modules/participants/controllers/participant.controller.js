@@ -4,41 +4,46 @@ import { parseDate } from '../../shared/utils/parseDate.js';
 
 export const saveParticipant = async (req, res) => {
     try {
-        const payload = req.body?.payload;
+        // Extraer el objeto de datos, tal como lo recomendaste.
+        const participantData = req.body?.payload?.object;
 
-        if (!payload || !payload.object) {
-            return res.status(400).json({ error: 'Payload inválido' });
+        if (!participantData) {
+            return res.status(400).json({ error: 'Payload inválido o faltante. Se esperaba req.body.payload.object.' });
         }
 
-        // Usar el nuevo método findOrCreate
-        const { participant, created } = await Participant.findOrCreate(payload);
+        // Usar el método findOrCreate con los datos ya extraídos.
+        const { participant, created } = await Participant.findOrCreate(participantData);
 
         // La lógica para verificar el retraso del host solo se ejecuta si el participante
         // es el host y es la primera vez que se guarda (created === true).
         if (participant.is_host && created) {
             const { meeting_id, join_time } = participant;
 
-            const meeting = await Meeting.getByMeetingId(Number(meeting_id));
-            if (!meeting) {
-                console.warn(`⚠️ Reunión no encontrada para meeting_id: ${meeting_id}`);
-            } else if (meeting.delay) {
-                console.log('✅ Reunión ya marcada como con delay, no se actualiza nuevamente');
-            } else {
-                const joinTime = parseDate(join_time);
-                const startTime = parseDate(meeting.start_time);
-
-                const delayInMin = Math.floor((joinTime - startTime) / 60000);
-
-                if (delayInMin > 5) {
-                    await Meeting.updateDelayByMeetingId(Number(meeting_id), true, delayInMin);
-                    console.log(`🚨 Host tardó ${delayInMin} min en ingresar. Marcado como delay.`);
+            // Asegurarse de que join_time exista antes de proceder.
+            if (join_time) {
+                const meeting = await Meeting.getByMeetingId(Number(meeting_id));
+                if (!meeting) {
+                    console.warn(`⚠️ Reunión no encontrada para meeting_id: ${meeting_id}`);
+                } else if (meeting.delay) {
+                    console.log('✅ Reunión ya marcada como con delay, no se actualiza nuevamente');
                 } else {
-                    console.log('✅ Host ingresó a tiempo');
+                    const joinTime = parseDate(join_time);
+                    const startTime = parseDate(meeting.start_time);
+
+                    const delayInMin = Math.floor((joinTime - startTime) / 60000);
+
+                    if (delayInMin > 5) {
+                        await Meeting.updateDelayByMeetingId(Number(meeting_id), true, delayInMin);
+                        console.log(`🚨 Host tardó ${delayInMin} min en ingresar. Marcado como delay.`);
+                    } else {
+                        console.log('✅ Host ingresó a tiempo');
+                    }
                 }
+            } else {
+                console.warn(`⚠️ El host no tiene join_time, no se puede calcular el retraso.`);
             }
         }
 
-        // Determinar el mensaje y el código de estado según si se creó o no
         const message = created ? 'Participante guardado exitosamente' : 'El participante ya existía, no se realizaron cambios.';
         const statusCode = created ? 201 : 200;
 
