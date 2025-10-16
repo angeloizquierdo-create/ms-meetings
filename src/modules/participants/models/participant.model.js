@@ -30,19 +30,30 @@ class Participant {
     }
     
     static async findOrCreate(participantData) {
-        const { meeting_id, participant_user_id } = participantData;
+        const { meeting_id, participant_user_id, email } = participantData;
 
-        // Si el participante tiene un ID de Zoom, buscamos si ya existe en esa reunión.
+        let existingParticipantQuery;
+
+        // Opción 1 (la más fiable): Buscar por ID de participante de Zoom.
         if (participant_user_id) {
-            const snapshot = await Participant.collection()
+            existingParticipantQuery = Participant.collection()
                 .where('meeting_id', '==', meeting_id)
-                .where('participant_user_id', '==', participant_user_id)
-                .limit(1)
-                .get();
+                .where('participant_user_id', '==', participant_user_id);
+        }
+        // Opción 2 (para invitados): Buscar por email.
+        else if (email) {
+            existingParticipantQuery = Participant.collection()
+                .where('meeting_id', '==', meeting_id)
+                .where('email', '==', email);
+        }
+
+        // Si tenemos una consulta que ejecutar (es decir, el participante es identificable)
+        if (existingParticipantQuery) {
+            const snapshot = await existingParticipantQuery.limit(1).get();
 
             if (!snapshot.empty) {
                 const doc = snapshot.docs[0];
-                console.log(`✅ Participante encontrado (ID: ${doc.id}), no se crea uno nuevo.`);
+                console.log(`✅ Participante encontrado por ID o email (ID: ${doc.id}), no se crea uno nuevo.`);
                 return {
                     participant: new Participant({ id: doc.id, ...doc.data() }),
                     created: false,
@@ -50,8 +61,8 @@ class Participant {
             }
         }
 
-        // Si no se encontró (o es un invitado sin participant_user_id), se crea uno nuevo.
-        console.log('✨ Participante no encontrado o es un invitado, creando uno nuevo.');
+        // Si no se pudo identificar o si, tras buscar, no se encontró, se crea uno nuevo.
+        console.log('✨ Participante no encontrado, creando uno nuevo.');
         const newParticipant = new Participant(participantData);
         await newParticipant.save();
         return {
