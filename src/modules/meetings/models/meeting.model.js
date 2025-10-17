@@ -62,8 +62,10 @@ class Meeting {
     }
 
     static async getByMeetingId(meetingId) {
+        // Aseguramos que la búsqueda siempre sea con un número
+        const numericMeetingId = Number(meetingId);
         const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', meetingId)
+            .where('meeting_id', '==', numericMeetingId)
             .limit(1)
             .get();
 
@@ -88,8 +90,9 @@ class Meeting {
     }
 
     static async updateStatusByMeetingId(meetingId, newStatus) {
+        const numericMeetingId = Number(meetingId);
         const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', meetingId)
+            .where('meeting_id', '==', numericMeetingId)
             .limit(1)
             .get();
 
@@ -105,8 +108,10 @@ class Meeting {
     }
 
     static async updateSummaryByMeetingId(meeting_id, summary) {
+        // SOLUCIÓN: Convertir a número aquí para garantizar la consulta correcta.
+        const numericMeetingId = Number(meeting_id);
         const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', meeting_id)
+            .where('meeting_id', '==', numericMeetingId)
             .limit(1)
             .get();
 
@@ -118,12 +123,13 @@ class Meeting {
             summary,
         });
 
-        return { id: doc.id, meeting_id, summary };
+        return { id: doc.id, meeting_id: numericMeetingId, summary };
     }
 
     static async updateMeetingByMeetingId(meetingId, dataToUpdate) {
+        const numericMeetingId = Number(meetingId);
         const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', meetingId)
+            .where('meeting_id', '==', numericMeetingId)
             .limit(1)
             .get();
 
@@ -190,8 +196,9 @@ class Meeting {
         return meetings;
     }
     static async updateDelayByMeetingId(meetingId, delay, delay_min) {
+        const numericMeetingId = Number(meetingId);
         const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', meetingId)
+            .where('meeting_id', '==', numericMeetingId)
             .limit(1)
             .get();
 
@@ -390,8 +397,9 @@ class Meeting {
     }
 
     static async deleteByMeetingId(meetingId) {
+        const numericMeetingId = Number(meetingId);
         const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', meetingId)
+            .where('meeting_id', '==', numericMeetingId)
             .limit(1)
             .get();
 
