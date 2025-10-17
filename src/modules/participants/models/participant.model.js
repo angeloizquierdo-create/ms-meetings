@@ -14,14 +14,14 @@ class Participant {
         meeting_uuid,
     }) {
         this.id = id;
-        this.user_id = user_id;
+        // SOLUCIÓN DE ESCRITURA: Asegurar que los IDs sean siempre numéricos en el objeto
+        this.user_id = user_id ? Number(user_id) : user_id;
         this.participant_user_id = participant_user_id || null;
         this.user_name = user_name || null;
         this.email = email || null;
         this.join_time = join_time;
         this.is_host = is_host;
-        this.host_id = host_id;
-        // SOLUCIÓN DE ESCRITURA: Asegurar que el meeting_id en el objeto sea siempre numérico
+        this.host_id = host_id ? Number(host_id) : host_id;
         this.meeting_id = meeting_id ? Number(meeting_id) : meeting_id;
         this.meeting_uuid = meeting_uuid;
     }
@@ -36,21 +36,21 @@ class Participant {
         let existingParticipantDoc = null;
 
         if (meeting_id && (user_id || email)) {
-            const numericId = Number(meeting_id);
-            const stringId = String(meeting_id);
+            const numericMeetingId = Number(meeting_id);
+            const stringMeetingId = String(meeting_id);
 
             let query;
-            // Prioridad 1: Buscar por user_id (cuenta de Zoom) y meeting_id
             if (user_id) {
+                const numericUserId = Number(user_id);
+                const stringUserId = String(user_id);
+                // SOLUCIÓN DE LECTURA: Buscar user_id Y meeting_id como número y texto
                 query = Participant.collection()
-                    .where('user_id', '==', user_id)
-                    .where('meeting_id', 'in', [numericId, stringId]);
-            } 
-            // Prioridad 2: Buscar por email (invitado) y meeting_id
-            else if (email) {
+                    .where('user_id', 'in', [numericUserId, stringUserId])
+                    .where('meeting_id', 'in', [numericMeetingId, stringMeetingId]);
+            } else if (email) {
                 query = Participant.collection()
                     .where('email', '==', email)
-                    .where('meeting_id', 'in', [numericId, stringId]);
+                    .where('meeting_id', 'in', [numericMeetingId, stringMeetingId]);
             }
 
             if (query) {
@@ -70,7 +70,6 @@ class Participant {
         }
 
         console.log('✨ Participante no encontrado, creando uno nuevo.');
-        // Al crear, nos aseguramos de que el meeting_id se guarde como número a través del constructor.
         const newParticipant = new Participant(participantData);
         await newParticipant.save();
         return {
@@ -79,18 +78,13 @@ class Participant {
         };
     }
 
-    static async getById(id) {
-        const doc = await Participant.collection().doc(id).get();
-        if (!doc.exists) return null;
-        return new Participant({ id: doc.id, ...doc.data() });
-    }
-
     async save() {
         const dataToSave = { ...this };
-        // Asegurarse de que el meeting_id es un número antes de guardar
-        if (dataToSave.meeting_id) {
-            dataToSave.meeting_id = Number(dataToSave.meeting_id);
-        }
+        // SOLUCIÓN DE ESCRITURA: Forzar conversión a número antes de guardar
+        if (dataToSave.meeting_id) dataToSave.meeting_id = Number(dataToSave.meeting_id);
+        if (dataToSave.user_id) dataToSave.user_id = Number(dataToSave.user_id);
+        if (dataToSave.host_id) dataToSave.host_id = Number(dataToSave.host_id);
+        
         delete dataToSave.id;
 
         Object.keys(dataToSave).forEach(key => {
@@ -138,9 +132,13 @@ class Participant {
     }
 
     static async getHostByHostId(hostId) {
+        const numericHostId = Number(hostId);
+        const stringHostId = String(hostId);
+
+        // SOLUCIÓN DE LECTURA: Buscar host_id como número y texto
         const snapshot = await Participant.collection()
             .where('is_host', '==', true)
-            .where('host_id', '==', hostId)
+            .where('host_id', 'in', [numericHostId, stringHostId])
             .limit(1)
             .get();
 
@@ -149,7 +147,13 @@ class Participant {
         return new Participant({ id: doc.id, ...doc.data() });
     }
     
-    // Las demás funciones no necesitan cambios si no buscan por meeting_id
+    // Funciones que no cambian
+    static async getById(id) {
+        const doc = await Participant.collection().doc(id).get();
+        if (!doc.exists) return null;
+        return new Participant({ id: doc.id, ...doc.data() });
+    }
+
     static async getAllHosts() {
         const snapshot = await Participant.collection().where('is_host', '==', true).get();
         const hosts = [];
