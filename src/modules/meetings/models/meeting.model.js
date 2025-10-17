@@ -42,7 +42,7 @@ class Meeting {
         const obj = payload?.object;
 
         return new Meeting({
-            meeting_id: obj?.id,
+            meeting_id: obj?.id ? Number(obj.id) : null,
             uuid: obj?.uuid,
             topic: obj?.topic,
             start_time: obj?.start_time,
@@ -55,6 +55,21 @@ class Meeting {
         });
     }
 
+    static async findMeetingByMixedId(meetingId) {
+        if (!meetingId) return null;
+
+        const numericId = Number(meetingId);
+        const stringId = String(meetingId);
+
+        const snapshot = await Meeting.collection()
+            .where('meeting_id', 'in', [numericId, stringId])
+            .limit(1)
+            .get();
+        
+        if (snapshot.empty) return null;
+        return snapshot.docs[0];
+    }
+
     static async getById(id) {
         const doc = await Meeting.collection().doc(id).get();
         if (!doc.exists) return null;
@@ -62,16 +77,8 @@ class Meeting {
     }
 
     static async getByMeetingId(meetingId) {
-        // Aseguramos que la búsqueda siempre sea con un número
-        const numericMeetingId = Number(meetingId);
-        const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', numericMeetingId)
-            .limit(1)
-            .get();
-
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
+        const doc = await Meeting.findMeetingByMixedId(meetingId);
+        if (!doc) return null;
         return new Meeting({ id: doc.id, ...doc.data() });
     }
 
@@ -90,128 +97,77 @@ class Meeting {
     }
 
     static async updateStatusByMeetingId(meetingId, newStatus) {
-        const numericMeetingId = Number(meetingId);
-        const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', numericMeetingId)
-            .limit(1)
-            .get();
+        const doc = await Meeting.findMeetingByMixedId(meetingId);
+        if (!doc) return null;
 
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
-
-        await Meeting.collection().doc(doc.id).update({
-            status: newStatus,
-        });
-
+        await Meeting.collection().doc(doc.id).update({ status: newStatus });
         return { id: doc.id, status: newStatus };
     }
 
     static async updateSummaryByMeetingId(meeting_id, summary) {
-        // SOLUCIÓN: Convertir a número aquí para garantizar la consulta correcta.
-        const numericMeetingId = Number(meeting_id);
-        const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', numericMeetingId)
-            .limit(1)
-            .get();
+        const doc = await Meeting.findMeetingByMixedId(meeting_id);
+        if (!doc) return null;
 
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
-
-        await Meeting.collection().doc(doc.id).update({
-            summary,
-        });
-
-        return { id: doc.id, meeting_id: numericMeetingId, summary };
+        await Meeting.collection().doc(doc.id).update({ summary });
+        return { id: doc.id, meeting_id: doc.data().meeting_id, summary };
     }
 
     static async updateMeetingByMeetingId(meetingId, dataToUpdate) {
-        const numericMeetingId = Number(meetingId);
-        const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', numericMeetingId)
-            .limit(1)
-            .get();
-
-        if (snapshot.empty) {
-            return null;
-        }
-
-        const doc = snapshot.docs[0];
+        const doc = await Meeting.findMeetingByMixedId(meetingId);
+        if (!doc) return null;
+        
         await Meeting.collection().doc(doc.id).update(dataToUpdate);
-
         return { id: doc.id, ...dataToUpdate };
     }
 
     static async getAll() {
         const snapshot = await Meeting.collection().get();
         const meetings = [];
-
         snapshot.forEach(doc => {
             meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
         });
-
         return meetings;
     }
 
     static async getLastMeetings(limit = 20) {
-        const snapshot = await Meeting.collection()
-            .orderBy('start_time', 'desc')
-            .limit(limit)
-            .get();
-
+        const snapshot = await Meeting.collection().orderBy('start_time', 'desc').limit(limit).get();
         const meetings = [];
         snapshot.forEach(doc => {
             meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
         });
-
         return meetings;
     }
 
     static async getTodayMeetings() {
-        const snapshot = await Meeting.collection()
-            .orderBy('start_time', 'desc')
-            .get();
-
+        const snapshot = await Meeting.collection().orderBy('start_time', 'desc').get();
         const meetings = [];
-
         const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
+        const todayStr = today.toISOString().split('T')[0];
 
         snapshot.forEach(doc => {
             const data = doc.data();
-            const startTime = parseDate(data.start_time); // convierte a objeto Date
-
-            if (startTime) {
-                const meetingDateStr = startTime.toISOString().split('T')[0]; // YYYY-MM-DD
-                if (meetingDateStr === todayStr) {
-                    meetings.push(new Meeting({ id: doc.id, ...data }));
-                }
+            const startTime = parseDate(data.start_time);
+            if (startTime && startTime.toISOString().split('T')[0] === todayStr) {
+                meetings.push(new Meeting({ id: doc.id, ...data }));
             }
         });
-
         return meetings;
     }
+
     static async updateDelayByMeetingId(meetingId, delay, delay_min) {
-        const numericMeetingId = Number(meetingId);
-        const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', numericMeetingId)
-            .limit(1)
-            .get();
+        const doc = await Meeting.findMeetingByMixedId(meetingId);
+        if (!doc) return null;
 
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
-
-        await Meeting.collection().doc(doc.id).update({
-            delay,
-            delay_min,
-        });
-
+        await Meeting.collection().doc(doc.id).update({ delay, delay_min });
         return { id: doc.id, delay, delay_min };
+    }
+
+    static async deleteByMeetingId(meetingId) {
+        const doc = await Meeting.findMeetingByMixedId(meetingId);
+        if (!doc) return null;
+
+        await Meeting.collection().doc(doc.id).delete();
+        return { id: doc.id };
     }
 
     static async getGroupedDelaysByHostId() {
@@ -240,7 +196,6 @@ class Meeting {
             current.amount_delay_min += delay_min || 0;
         });
 
-        // Enriquecer cada item con user_name y email
         const enriched = await Promise.all(
             Array.from(delayMap.values()).map(async (item) => {
                 let user_name = null;
@@ -289,7 +244,6 @@ class Meeting {
             current.amount_delay_min += delay_min || 0;
         });
 
-        // Enriquecer con nombre y email
         const enriched = await Promise.all(
             Array.from(delayMap.values()).map(async (item) => {
                 let user_name = null;
@@ -309,10 +263,8 @@ class Meeting {
             })
         );
 
-        // Ordenar por cantidad de tardanzas (desc)
         const sorted = enriched.sort((a, b) => b.amount_delay - a.amount_delay);
 
-        // Si se pasa un limit, se aplica, si no, devuelve todo
         return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
     }
 
@@ -330,8 +282,7 @@ class Meeting {
     }
 
     static async getHostsMoreInfo(limit) {
-        const snapshot = await Meeting.collection()
-            .get();
+        const snapshot = await Meeting.collection().get();
 
         const delayMap = new Map();
 
@@ -354,7 +305,6 @@ class Meeting {
             current.amount_delay_min += delay_min || 0;
         });
 
-        // Enriquecer con nombre, email, num_reuniones y promedio de rating
         const enriched = await Promise.all(
             Array.from(delayMap.values()).map(async (item) => {
                 let user_name = null;
@@ -362,18 +312,15 @@ class Meeting {
                 let num_reuniones = 0;
                 let average = 0;
 
-                // Nombre y email
                 const host = await Participant.getHostByHostId(item.host_id);
                 if (host) {
                     user_name = host.user_name || null;
                     email = host.email || null;
                 }
 
-                // Total reuniones
                 const reuniones = await Meeting.getAllByHostId(item.host_id);
                 num_reuniones = reuniones.length;
 
-                // Calcular promedio rating
                 const ratings = await Rating.getAllByHostId(item.host_id);
                 if (ratings.length) {
                     const total = ratings.reduce((acc, r) => acc + (r.score || 0), 0);
@@ -390,27 +337,9 @@ class Meeting {
             })
         );
 
-        // Ordenar por cantidad de tardanzas (desc)
         const sorted = enriched.sort((a, b) => b.amount_delay - a.amount_delay);
 
         return typeof limit === 'number' ? sorted.slice(0, limit) : sorted;
-    }
-
-    static async deleteByMeetingId(meetingId) {
-        const numericMeetingId = Number(meetingId);
-        const snapshot = await Meeting.collection()
-            .where('meeting_id', '==', numericMeetingId)
-            .limit(1)
-            .get();
-
-        if (snapshot.empty) {
-            return null;
-        }
-
-        const doc = snapshot.docs[0];
-        await Meeting.collection().doc(doc.id).delete();
-
-        return { id: doc.id };
     }
 }
 
