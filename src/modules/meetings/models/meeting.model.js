@@ -19,14 +19,14 @@ class Meeting {
         summary = null,
         actualStartTime = null,
     }) {
-        this.meeting_id = meeting_id ? Number(meeting_id) : meeting_id;
+        this.meeting_id = meeting_id;
         this.uuid = uuid;
         this.topic = topic;
         this.start_time = start_time;
         this.join_url = join_url || null;
         this.status = status;
         this.duration = duration;
-        this.host_id = host_id ? Number(host_id) : host_id;
+        this.host_id = host_id;
         this.host_email = host_email;
         this.delay = delay || false;
         this.delay_min = delay_min || 0;
@@ -84,17 +84,10 @@ class Meeting {
 
     async save() {
         const dataToSave = { ...this };
-        if (dataToSave.meeting_id) dataToSave.meeting_id = Number(dataToSave.meeting_id);
-        if (dataToSave.host_id) dataToSave.host_id = Number(dataToSave.host_id);
-        
         delete dataToSave.id;
 
-        Object.keys(dataToSave).forEach(key => {
-            if (dataToSave[key] === undefined) delete dataToSave[key];
-        });
-
         if (this.id) {
-            await Meeting.collection().doc(this.id).set(dataToSave, { merge: true });
+            await Meeting.collection().doc(this.id).set(dataToSave);
         } else {
             const docRef = await Meeting.collection().add(dataToSave);
             this.id = docRef.id;
