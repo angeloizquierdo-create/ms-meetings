@@ -14,6 +14,7 @@ class Meeting {
         duration,
         host_id,
         host_email,
+        occurrence_id, // Campo añadido
         delay = false,
         delay_min = 0,
         summary = null,
@@ -28,6 +29,7 @@ class Meeting {
         this.duration = duration;
         this.host_id = host_id;
         this.host_email = host_email;
+        this.occurrence_id = occurrence_id || null; // Campo añadido
         this.delay = delay || false;
         this.delay_min = delay_min || 0;
         this.summary = summary;
@@ -51,6 +53,7 @@ class Meeting {
             duration: obj?.duration,
             host_id: obj?.host_id,
             host_email: obj?.host_email,
+            occurrence_id: obj?.occurrence_id, // Campo añadido
             summary: obj?.summary || null,
         });
     }
