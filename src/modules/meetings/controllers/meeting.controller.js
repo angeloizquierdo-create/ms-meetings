@@ -259,6 +259,42 @@ export const updateMeetingSummaryById = async (req, res) => {
     }
 };
 
+export const updateMeetingSummaryByOccurrenceId = async (req, res) => {
+    try {
+        const { occurrence_id } = req.params;
+        const { summary } = req.body;
+
+        if (!occurrence_id || typeof summary !== 'string') {
+            return res.status(400).json({
+                status: 'error',
+                message: 'occurrence_id y summary son requeridos',
+            });
+        }
+
+        const updated = await Meeting.updateSummaryByOccurrenceId(occurrence_id, summary);
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada con ese occurrence_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Resumen actualizado correctamente por occurrence_id',
+            data: updated,
+        });
+    } catch (error) {
+        console.error('🔥 Error al actualizar summary de reunión por occurrence_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al actualizar summary',
+            error: error.message,
+        });
+    }
+};
+
 export const getAllMeetings = async (_req, res) => {
     try {
         const meetings = await Meeting.getAll();

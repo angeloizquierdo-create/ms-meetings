@@ -15,7 +15,8 @@ import {
     getMeetingsByHostId,
     updateMeetingByMeetingId,
     updateMeetingByOccurrenceId,
-    updateMeetingStatusByOccurrenceId
+    updateMeetingStatusByOccurrenceId,
+    updateMeetingSummaryByOccurrenceId
 } from '../controllers/meeting.controller.js';
 
 const MeetingRouter = Router();
@@ -28,6 +29,7 @@ MeetingRouter.get('/top-delayed-hosts', getTopDelayedHosts);
 MeetingRouter.post('/save', saveMeeting);
 MeetingRouter.delete('/delete/by-meeting-id/:meeting_id', deleteMeetingByMeetingId);
 MeetingRouter.get('/by-host/:host_id', getMeetingsByHostId);
+MeetingRouter.patch('/summary/by-occurrence-id/:occurrence_id', updateMeetingSummaryByOccurrenceId);
 MeetingRouter.patch('/summary/:meeting_id', updateMeetingSummaryById);
 MeetingRouter.patch('/update/by-meeting-id/:meeting_id', updateMeetingByMeetingId);
 MeetingRouter.patch('/update/by-occurrence-id/:occurrence_id', updateMeetingByOccurrenceId);
