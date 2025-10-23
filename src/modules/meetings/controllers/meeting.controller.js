@@ -185,6 +185,42 @@ export const updateMeetingByOccurrenceId = async (req, res) => {
     }
 };
 
+export const updateMeetingStatusByOccurrenceId = async (req, res) => {
+    try {
+        const { occurrence_id } = req.params;
+        const { status } = req.body;
+
+        if (!occurrence_id || !status) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'occurrence_id y status son requeridos',
+            });
+        }
+
+        const updated = await Meeting.updateStatusByOccurrenceId(occurrence_id, status);
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada con ese occurrence_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Estado de reunión actualizado correctamente por occurrence_id',
+            data: updated,
+        });
+    } catch (error) {
+        console.error('🔥 Error al actualizar status de reunión por occurrence_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al actualizar status',
+            error: error.message,
+        });
+    }
+};
+
 export const updateMeetingSummaryById = async (req, res) => {
     try {
         const { meeting_id } = req.params;

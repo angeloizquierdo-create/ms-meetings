@@ -14,7 +14,8 @@ import {
     getHostsMoreInfo,
     getMeetingsByHostId,
     updateMeetingByMeetingId,
-    updateMeetingByOccurrenceId
+    updateMeetingByOccurrenceId,
+    updateMeetingStatusByOccurrenceId
 } from '../controllers/meeting.controller.js';
 
 const MeetingRouter = Router();
@@ -30,6 +31,7 @@ MeetingRouter.get('/by-host/:host_id', getMeetingsByHostId);
 MeetingRouter.patch('/summary/:meeting_id', updateMeetingSummaryById);
 MeetingRouter.patch('/update/by-meeting-id/:meeting_id', updateMeetingByMeetingId);
 MeetingRouter.patch('/update/by-occurrence-id/:occurrence_id', updateMeetingByOccurrenceId);
+MeetingRouter.patch('/status/by-occurrence-id/:occurrence_id', updateMeetingStatusByOccurrenceId);
 MeetingRouter.get('/all', getAllMeetings);
 MeetingRouter.patch('/status/:meeting_id', updateMeetingStatusById);
 MeetingRouter.get('/:id', getMeetingById);
