@@ -1,3 +1,4 @@
+
 import db from '../../../config/firebase/firebase.js';
 import Participant from '../../participants/models/participant.model.js';
 import Rating from '../../ratings/models/rating.model.js';
@@ -119,6 +120,15 @@ class Meeting {
         const doc = await Meeting.findMeetingByMixedId(meetingId);
         if (!doc) return null;
         
+        await Meeting.collection().doc(doc.id).update(dataToUpdate);
+        return { id: doc.id, ...dataToUpdate };
+    }
+    
+    static async updateMeetingByOccurrenceId(occurrenceId, dataToUpdate) {
+        const snapshot = await Meeting.collection().where('occurrence_id', '==', occurrenceId).limit(1).get();
+        if (snapshot.empty) return null;
+
+        const doc = snapshot.docs[0];
         await Meeting.collection().doc(doc.id).update(dataToUpdate);
         return { id: doc.id, ...dataToUpdate };
     }

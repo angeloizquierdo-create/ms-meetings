@@ -1,3 +1,4 @@
+
 import Meeting from '../models/meeting.model.js';
 import Participant from '../../participants/models/participant.model.js';
 import Rating from '../../ratings/models/rating.model.js';
@@ -133,6 +134,49 @@ export const updateMeetingByMeetingId = async (req, res) => {
         });
     } catch (error) {
         console.error('🔥 Error al actualizar la reunión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al actualizar la reunión',
+            error: error.message,
+        });
+    }
+};
+
+export const updateMeetingByOccurrenceId = async (req, res) => {
+    try {
+        const { occurrence_id } = req.params;
+        const dataToUpdate = req.body;
+
+        if (!occurrence_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El occurrence_id es requerido',
+            });
+        }
+
+        if (!dataToUpdate || Object.keys(dataToUpdate).length === 0) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'No se proporcionaron datos para actualizar',
+            });
+        }
+
+        const updated = await Meeting.updateMeetingByOccurrenceId(occurrence_id, dataToUpdate);
+
+        if (!updated) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'Reunión no encontrada con ese occurrence_id',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Reunión actualizada exitosamente por occurrence_id',
+            data: updated,
+        });
+    } catch (error) {
+        console.error('🔥 Error al actualizar la reunión por occurrence_id:', error);
         return res.status(500).json({
             status: 'error',
             message: 'Ocurrió un error al actualizar la reunión',
