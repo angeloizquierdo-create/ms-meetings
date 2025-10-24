@@ -151,3 +151,37 @@ export const getHostByHostId = async (req, res) => {
         });
     }
 };
+
+export const deleteParticipantById = async (req, res) => {
+    try {
+        const { participant_id } = req.params;
+
+        if (!participant_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El ID del participante es requerido para la eliminación.',
+            });
+        }
+
+        const result = await Participant.deleteById(participant_id);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: 'No se encontró un participante con el ID proporcionado.',
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: 'Participante eliminado exitosamente.',
+        });
+    } catch (error) {
+        console.error('🔥 Error al eliminar participante:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al eliminar el participante.',
+            error: error.message,
+        });
+    }
+};

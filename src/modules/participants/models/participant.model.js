@@ -156,6 +156,18 @@ class Participant {
         });
         return participants;
     }
+
+    static async deleteById(id) {
+        const docRef = Participant.collection().doc(id);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return { affectedRows: 0 };
+        }
+
+        await docRef.delete();
+        return { affectedRows: 1 };
+    }
 }
 
 export default Participant;
