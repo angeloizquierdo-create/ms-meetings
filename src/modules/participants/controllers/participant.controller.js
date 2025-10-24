@@ -185,3 +185,39 @@ export const deleteParticipantById = async (req, res) => {
         });
     }
 };
+
+export const deleteParticipantsByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+
+        if (!meeting_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El ID de la reunión es requerido para la eliminación.',
+            });
+        }
+
+        const result = await Participant.deleteByMeetingId(meeting_id);
+
+        if (result.affectedRows === 0) {
+            return res.status(200).json({
+                status: 'ok',
+                message: 'No se encontraron participantes para la reunión con el ID proporcionado, no se eliminó nada.',
+                data: { deleted_count: 0 },
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Se eliminaron ${result.affectedRows} participantes exitosamente.`,
+            data: { deleted_count: result.affectedRows },
+        });
+    } catch (error) {
+        console.error('🔥 Error al eliminar participantes por meeting_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Error interno al eliminar los participantes.',
+            error: error.message,
+        });
+    }
+};

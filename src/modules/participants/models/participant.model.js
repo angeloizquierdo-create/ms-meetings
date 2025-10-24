@@ -168,6 +168,28 @@ class Participant {
         await docRef.delete();
         return { affectedRows: 1 };
     }
+
+    static async deleteByMeetingId(meeting_id) {
+        const numericId = Number(meeting_id);
+        const stringId = String(meeting_id);
+
+        const snapshot = await Participant.collection()
+            .where('meeting_id', 'in', [numericId, stringId])
+            .get();
+
+        if (snapshot.empty) {
+            return { affectedRows: 0 };
+        }
+
+        const batch = db.batch();
+        snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
+        return { affectedRows: snapshot.size };
+    }
 }
 
 export default Participant;

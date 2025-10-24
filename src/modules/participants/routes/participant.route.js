@@ -5,7 +5,8 @@ import {
     getAllParticipants,
     getHostByHostId,
     getParticipantsByMeetingId,
-    deleteParticipantById
+    deleteParticipantById,
+    deleteParticipantsByMeetingId // Importamos la nueva función
 } from '../controllers/participant.controller.js';
 
 const ParticipantRouter = Router();
@@ -16,5 +17,8 @@ ParticipantRouter.get('/all-participants-by-meeting/:meeting_id', getParticipant
 ParticipantRouter.get('/all-hosts', getAllHosts);
 ParticipantRouter.get('/by-host-id/:host_id', getHostByHostId);
 ParticipantRouter.delete('/delete/:participant_id', deleteParticipantById);
+
+// Nueva ruta para eliminar participantes por meeting_id
+ParticipantRouter.delete('/delete/by-meeting-id/:meeting_id', deleteParticipantsByMeetingId);
 
 export default ParticipantRouter;
