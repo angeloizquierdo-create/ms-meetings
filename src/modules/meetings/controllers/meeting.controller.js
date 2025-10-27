@@ -447,26 +447,27 @@ export const getMeetingById = async (req, res) => {
 export const getMeetingByMeetingId = async (req, res) => {
     try {
         const { meeting_id } = req.params;
+        const { occurrence_id } = req.query; // Obtener el occurrence_id desde los query params
 
         if (!meeting_id) {
             return res.status(400).json({
                 status: 'error',
-                message: 'meeting_id no proporcionado',
+                message: 'El meeting_id no fue proporcionado',
             });
         }
 
-        const meeting = await Meeting.getByMeetingId(Number(meeting_id));
+        const meeting = await Meeting.getByMeetingId(Number(meeting_id), occurrence_id);
 
         if (!meeting) {
             return res.status(404).json({
                 status: 'error',
-                message: 'Reunión no encontrada con ese meeting_id',
+                message: 'Reunión no encontrada con los parámetros proporcionados',
             });
         }
 
         return res.status(200).json({
             status: 'ok',
-            message: 'Reunión obtenida exitosamente por meeting_id',
+            message: 'Reunión obtenida exitosamente',
             data: meeting,
         });
     } catch (error) {

@@ -80,9 +80,28 @@ class Meeting {
         return new Meeting({ id: doc.id, ...doc.data() });
     }
 
-    static async getByMeetingId(meetingId) {
-        const doc = await Meeting.findMeetingByMixedId(meetingId);
-        if (!doc) return null;
+    static async getByMeetingId(meetingId, occurrenceId = null) {
+        const numericMeetingId = Number(meetingId);
+
+        if (isNaN(numericMeetingId)) {
+            console.error("Invalid meetingId provided:", meetingId);
+            return null;
+        }
+
+        let query = Meeting.collection().where('meeting_id', '==', numericMeetingId);
+
+        // Si se proporciona un occurrence_id, se añade como filtro a la consulta.
+        if (occurrenceId) {
+            query = query.where('occurrence_id', '==', occurrenceId);
+        }
+
+        const snapshot = await query.limit(1).get();
+
+        if (snapshot.empty) {
+            return null;
+        }
+
+        const doc = snapshot.docs[0];
         return new Meeting({ id: doc.id, ...doc.data() });
     }
 
@@ -133,7 +152,7 @@ class Meeting {
         return { id: doc.id, ...dataToUpdate };
     }
     
-    static async updateStatusByOccurrenceId(occurrenceId, newStatus) {
+   static async updateStatusByOccurrenceId(occurrenceId, newStatus) {
         const snapshot = await Meeting.collection().where('occurrence_id', '==', occurrenceId).limit(1).get();
         if (snapshot.empty) return null;
 
