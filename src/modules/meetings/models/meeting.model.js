@@ -81,28 +81,40 @@ class Meeting {
     }
 
     static async getByMeetingId(meetingId, occurrenceId = null) {
-        const numericMeetingId = Number(meetingId);
-
-        if (isNaN(numericMeetingId)) {
-            console.error("Invalid meetingId provided:", meetingId);
+        if (!meetingId) {
+            console.error("No se proporcionó meetingId.");
             return null;
         }
-
-        let query = Meeting.collection().where('meeting_id', '==', numericMeetingId);
-
-        // Si se proporciona un occurrence_id, se añade como filtro a la consulta.
-        if (occurrenceId) {
-            query = query.where('occurrence_id', '==', occurrenceId);
-        }
-
-        const snapshot = await query.limit(1).get();
-
+    
+        // Búsqueda robusta para meeting_id (como número y como texto)
+        const meetingIdAsNumber = Number(meetingId);
+        const meetingIdAsString = String(meetingId);
+    
+        const query = Meeting.collection().where('meeting_id', 'in', [meetingIdAsNumber, meetingIdAsString]);
+        const snapshot = await query.get();
+    
         if (snapshot.empty) {
             return null;
         }
-
-        const doc = snapshot.docs[0];
-        return new Meeting({ id: doc.id, ...doc.data() });
+    
+        // Si no hay occurrenceId, devolvemos el primer resultado
+        if (!occurrenceId) {
+            const doc = snapshot.docs[0];
+            return new Meeting({ id: doc.id, ...doc.data() });
+        }
+    
+        // Si hay occurrenceId, filtramos en el código para máxima robustez
+        // La comparación con `==` maneja casos de texto vs número (ej: 123 == '123')
+        const foundDoc = snapshot.docs.find(doc => {
+            const docData = doc.data();
+            return docData.occurrence_id == occurrenceId;
+        });
+    
+        if (!foundDoc) {
+            return null;
+        }
+    
+        return new Meeting({ id: foundDoc.id, ...foundDoc.data() });
     }
 
     async save() {
