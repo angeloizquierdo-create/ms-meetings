@@ -145,28 +145,28 @@ export const updateMeetingByMeetingId = async (req, res) => {
 export const updateMeetingByOccurrenceId = async (req, res) => {
     try {
         const { occurrence_id } = req.params;
-        const dataToUpdate = req.body;
+        const { meeting_id, ...dataToUpdate } = req.body;
 
-        if (!occurrence_id) {
+        if (!occurrence_id || !meeting_id) {
             return res.status(400).json({
                 status: 'error',
-                message: 'El occurrence_id es requerido',
+                message: 'El occurrence_id y el meeting_id son requeridos',
             });
         }
 
-        if (!dataToUpdate || Object.keys(dataToUpdate).length === 0) {
+        if (Object.keys(dataToUpdate).length === 0) {
             return res.status(400).json({
                 status: 'error',
                 message: 'No se proporcionaron datos para actualizar',
             });
         }
 
-        const updated = await Meeting.updateMeetingByOccurrenceId(occurrence_id, dataToUpdate);
+        const updated = await Meeting.updateMeetingByOccurrenceId(occurrence_id, meeting_id, dataToUpdate);
 
         if (!updated) {
             return res.status(404).json({
                 status: 'error',
-                message: 'Reunión no encontrada con ese occurrence_id',
+                message: 'Reunión no encontrada con la combinación de occurrence_id y meeting_id',
             });
         }
 
@@ -188,21 +188,21 @@ export const updateMeetingByOccurrenceId = async (req, res) => {
 export const updateMeetingStatusByOccurrenceId = async (req, res) => {
     try {
         const { occurrence_id } = req.params;
-        const { status } = req.body;
+        const { status, meeting_id } = req.body;
 
-        if (!occurrence_id || !status) {
+        if (!occurrence_id || !status || !meeting_id) {
             return res.status(400).json({
                 status: 'error',
-                message: 'occurrence_id y status son requeridos',
+                message: 'occurrence_id, status y meeting_id son requeridos',
             });
         }
 
-        const updated = await Meeting.updateStatusByOccurrenceId(occurrence_id, status);
+        const updated = await Meeting.updateStatusByOccurrenceId(occurrence_id, meeting_id, status);
 
         if (!updated) {
             return res.status(404).json({
                 status: 'error',
-                message: 'Reunión no encontrada con ese occurrence_id',
+                message: 'Reunión no encontrada con la combinación de occurrence_id y meeting_id',
             });
         }
 
@@ -456,7 +456,7 @@ export const getMeetingByMeetingId = async (req, res) => {
             });
         }
 
-        const meeting = await Meeting.getByMeetingId(Number(meeting_id), occurrence_id);
+        const meeting = await Meeting.getByMeetingId(meeting_id, occurrence_id);
 
         if (!meeting) {
             return res.status(404).json({

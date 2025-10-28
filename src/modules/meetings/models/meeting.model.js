@@ -58,6 +58,23 @@ class Meeting {
             summary: obj?.summary || null,
         });
     }
+    
+    static async findByMeetingAndOccurrenceId(meetingId, occurrenceId) {
+        if (!meetingId || !occurrenceId) return null;
+    
+        const meetingIdAsNumber = Number(meetingId);
+        const meetingIdAsString = String(meetingId);
+    
+        const query = Meeting.collection().where('meeting_id', 'in', [meetingIdAsNumber, meetingIdAsString]);
+        const snapshot = await query.get();
+    
+        if (snapshot.empty) return null;
+    
+        // Filtra en el código para manejar inconsistencias de tipo en occurrence_id
+        const foundDoc = snapshot.docs.find(doc => doc.data().occurrence_id == occurrenceId);
+    
+        return foundDoc || null;
+    }
 
     static async findMeetingByMixedId(meetingId) {
         if (!meetingId) return null;
@@ -155,22 +172,20 @@ class Meeting {
         return { id: doc.id, ...dataToUpdate };
     }
     
-    static async updateMeetingByOccurrenceId(occurrenceId, dataToUpdate) {
-        const snapshot = await Meeting.collection().where('occurrence_id', '==', occurrenceId).limit(1).get();
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
-        await Meeting.collection().doc(doc.id).update(dataToUpdate);
-        return { id: doc.id, ...dataToUpdate };
+    static async updateMeetingByOccurrenceId(occurrenceId, meetingId, dataToUpdate) {
+        const docToUpdate = await this.findByMeetingAndOccurrenceId(meetingId, occurrenceId);
+        if (!docToUpdate) return null;
+    
+        await Meeting.collection().doc(docToUpdate.id).update(dataToUpdate);
+        return { id: docToUpdate.id, ...dataToUpdate };
     }
     
-   static async updateStatusByOccurrenceId(occurrenceId, newStatus) {
-        const snapshot = await Meeting.collection().where('occurrence_id', '==', occurrenceId).limit(1).get();
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
-        await Meeting.collection().doc(doc.id).update({ status: newStatus });
-        return { id: doc.id, status: newStatus };
+    static async updateStatusByOccurrenceId(occurrenceId, meetingId, newStatus) {
+        const docToUpdate = await this.findByMeetingAndOccurrenceId(meetingId, occurrenceId);
+        if (!docToUpdate) return null;
+    
+        await Meeting.collection().doc(docToUpdate.id).update({ status: newStatus });
+        return { id: docToUpdate.id, status: newStatus };
     }
 
     static async updateSummaryByOccurrenceId(occurrenceId, summary) {
