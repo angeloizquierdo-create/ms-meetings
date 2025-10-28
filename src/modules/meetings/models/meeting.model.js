@@ -188,13 +188,12 @@ class Meeting {
         return { id: docToUpdate.id, status: newStatus };
     }
 
-    static async updateSummaryByOccurrenceId(occurrenceId, summary) {
-        const snapshot = await Meeting.collection().where('occurrence_id', '==', occurrenceId).limit(1).get();
-        if (snapshot.empty) return null;
-
-        const doc = snapshot.docs[0];
-        await Meeting.collection().doc(doc.id).update({ summary });
-        return { id: doc.id, summary };
+    static async updateSummaryByOccurrenceId(occurrenceId, meetingId, summary) {
+        const docToUpdate = await this.findByMeetingAndOccurrenceId(meetingId, occurrenceId);
+        if (!docToUpdate) return null;
+    
+        await Meeting.collection().doc(docToUpdate.id).update({ summary });
+        return { id: docToUpdate.id, summary };
     }
 
     static async getAll() {

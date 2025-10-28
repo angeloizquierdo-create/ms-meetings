@@ -150,7 +150,7 @@ export const updateMeetingByOccurrenceId = async (req, res) => {
         if (!occurrence_id || !meeting_id) {
             return res.status(400).json({
                 status: 'error',
-                message: 'El occurrence_id y el meeting_id son requeridos',
+                message: 'El occurrence_id (en la URL) y el meeting_id (en el body) son requeridos',
             });
         }
 
@@ -172,7 +172,7 @@ export const updateMeetingByOccurrenceId = async (req, res) => {
 
         return res.status(200).json({
             status: 'ok',
-            message: 'Reunión actualizada exitosamente por occurrence_id',
+            message: 'Reunión actualizada exitosamente por occurrence_id y meeting_id',
             data: updated,
         });
     } catch (error) {
@@ -193,7 +193,7 @@ export const updateMeetingStatusByOccurrenceId = async (req, res) => {
         if (!occurrence_id || !status || !meeting_id) {
             return res.status(400).json({
                 status: 'error',
-                message: 'occurrence_id, status y meeting_id son requeridos',
+                message: 'El occurrence_id (en la URL), y el status y meeting_id (en el body) son requeridos',
             });
         }
 
@@ -208,7 +208,7 @@ export const updateMeetingStatusByOccurrenceId = async (req, res) => {
 
         return res.status(200).json({
             status: 'ok',
-            message: 'Estado de reunión actualizado correctamente por occurrence_id',
+            message: 'Estado de reunión actualizado correctamente por occurrence_id y meeting_id',
             data: updated,
         });
     } catch (error) {
@@ -262,27 +262,27 @@ export const updateMeetingSummaryById = async (req, res) => {
 export const updateMeetingSummaryByOccurrenceId = async (req, res) => {
     try {
         const { occurrence_id } = req.params;
-        const { summary } = req.body;
+        const { summary, meeting_id } = req.body;
 
-        if (!occurrence_id || typeof summary !== 'string') {
+        if (!occurrence_id || typeof summary !== 'string' || !meeting_id) {
             return res.status(400).json({
                 status: 'error',
-                message: 'occurrence_id y summary son requeridos',
+                message: 'El occurrence_id (en la URL) y el summary y meeting_id (en el body) son requeridos',
             });
         }
 
-        const updated = await Meeting.updateSummaryByOccurrenceId(occurrence_id, summary);
+        const updated = await Meeting.updateSummaryByOccurrenceId(occurrence_id, meeting_id, summary);
 
         if (!updated) {
             return res.status(404).json({
                 status: 'error',
-                message: 'Reunión no encontrada con ese occurrence_id',
+                message: 'Reunión no encontrada con la combinación de occurrence_id y meeting_id',
             });
         }
 
         return res.status(200).json({
             status: 'ok',
-            message: 'Resumen actualizado correctamente por occurrence_id',
+            message: 'Resumen actualizado correctamente por occurrence_id y meeting_id',
             data: updated,
         });
     } catch (error) {
