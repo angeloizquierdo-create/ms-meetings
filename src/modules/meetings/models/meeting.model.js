@@ -60,19 +60,39 @@ class Meeting {
     }
     
     static async findByMeetingAndOccurrenceId(meetingId, occurrenceId) {
-        if (!meetingId || !occurrenceId) return null;
+        console.log(`[DB] Buscando con meetingId: ${meetingId} (tipo: ${typeof meetingId}) y occurrenceId: ${occurrenceId} (tipo: ${typeof occurrenceId})`);
+
+        if (!meetingId || !occurrenceId) {
+            console.log('[DB] Búsqueda abortada: meetingId o occurrenceId no proporcionados.');
+            return null;
+        }
     
         const meetingIdAsNumber = Number(meetingId);
         const meetingIdAsString = String(meetingId);
     
+        console.log(`[DB] Buscando con meeting_id IN [${meetingIdAsNumber}, "${meetingIdAsString}"]`);
         const query = Meeting.collection().where('meeting_id', 'in', [meetingIdAsNumber, meetingIdAsString]);
         const snapshot = await query.get();
     
-        if (snapshot.empty) return null;
+        if (snapshot.empty) {
+            console.log('[DB] No se encontraron documentos con ese meeting_id.');
+            return null;
+        }
+        
+        console.log(`[DB] Se encontraron ${snapshot.docs.length} documento(s) con el meeting_id. Filtrando por occurrence_id...`);
+
+        const foundDoc = snapshot.docs.find(doc => {
+            const data = doc.data();
+            console.log(`[DB] Comparando occurrence_id: ${data.occurrence_id} == ${occurrenceId}`);
+            return data.occurrence_id == occurrenceId;
+        });
     
-        // Filtra en el código para manejar inconsistencias de tipo en occurrence_id
-        const foundDoc = snapshot.docs.find(doc => doc.data().occurrence_id == occurrenceId);
-    
+        if (foundDoc) {
+            console.log(`[DB] ¡Coincidencia encontrada! ID del documento: ${foundDoc.id}`);
+        } else {
+            console.log('[DB] No se encontró ningún documento que coincida también con el occurrence_id.');
+        }
+
         return foundDoc || null;
     }
 
@@ -189,11 +209,25 @@ class Meeting {
     }
 
     static async updateSummaryByOccurrenceId(occurrenceId, meetingId, summary) {
+        console.log(`[API] Iniciando actualización de resumen para occurrenceId: ${occurrenceId} y meetingId: ${meetingId}`);
+        
         const docToUpdate = await this.findByMeetingAndOccurrenceId(meetingId, occurrenceId);
-        if (!docToUpdate) return null;
     
-        await Meeting.collection().doc(docToUpdate.id).update({ summary });
-        return { id: docToUpdate.id, summary };
+        if (!docToUpdate) {
+            console.log('[API] No se encontró ningún documento para actualizar. La operación termina.');
+            return null;
+        }
+    
+        console.log(`[API] Documento encontrado con ID: ${docToUpdate.id}. Procediendo a actualizar el resumen.`);
+        
+        try {
+            await Meeting.collection().doc(docToUpdate.id).update({ summary });
+            console.log(`[API] ¡Éxito! El resumen para el documento ${docToUpdate.id} fue actualizado en la base de datos.`);
+            return { id: docToUpdate.id, summary };
+        } catch (error) {
+            console.error(`[API] 🔥 ¡Error al actualizar en Firestore! Documento ID: ${docToUpdate.id}`, error);
+            return null; // Devuelve null para que el controlador sepa que algo falló.
+        }
     }
 
     static async getAll() {
