@@ -11,11 +11,12 @@ class Meeting {
         topic,
         start_time,
         join_url,
+        start_url, // Añadido para la URL de inicio del anfitrión
         status,
         duration,
         host_id,
         host_email,
-        occurrence_id, // Campo añadido
+        occurrence_id,
         delay = false,
         delay_min = 0,
         summary = null,
@@ -26,11 +27,12 @@ class Meeting {
         this.topic = topic;
         this.start_time = start_time;
         this.join_url = join_url || null;
+        this.start_url = start_url || null; // Añadido para la URL de inicio del anfitrión
         this.status = status;
         this.duration = duration;
         this.host_id = host_id;
         this.host_email = host_email;
-        this.occurrence_id = occurrence_id || null; // Campo añadido
+        this.occurrence_id = occurrence_id || null;
         this.delay = delay || false;
         this.delay_min = delay_min || 0;
         this.summary = summary;
@@ -50,11 +52,12 @@ class Meeting {
             topic: obj?.topic,
             start_time: obj?.start_time,
             join_url: obj?.join_url,
+            start_url: obj?.start_url, // Añadido para la URL de inicio del anfitrión
             status: obj?.status,
             duration: obj?.duration,
             host_id: obj?.host_id,
             host_email: obj?.host_email,
-            occurrence_id: obj?.occurrence_id, // Campo añadido
+            occurrence_id: obj?.occurrence_id,
             summary: obj?.summary || null,
         });
     }
@@ -203,7 +206,6 @@ class Meeting {
     static async updateStatusByOccurrenceId(occurrenceId, meetingId, newStatus) {
         const docToUpdate = await this.findByMeetingAndOccurrenceId(meetingId, occurrenceId);
         if (!docToUpdate) return null;
-    
         await Meeting.collection().doc(docToUpdate.id).update({ status: newStatus });
         return { id: docToUpdate.id, status: newStatus };
     }
