@@ -480,6 +480,45 @@ export const getMeetingByMeetingId = async (req, res) => {
     }
 };
 
+/**
+ * NUEVO CONTROLADOR
+ * Busca y devuelve todas las reuniones que comparten el mismo meeting_id.
+ */
+export const getAllMeetingsByMeetingId = async (req, res) => {
+    try {
+        const { meeting_id } = req.params;
+
+        if (!meeting_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El meeting_id no fue proporcionado',
+            });
+        }
+
+        const meetings = await Meeting.getAllByMeetingId(meeting_id);
+
+        if (!meetings || meetings.length === 0) {
+            return res.status(404).json({
+                status: 'error',
+                message: `No se encontraron reuniones con el meeting_id: ${meeting_id}`,
+            });
+        }
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Se encontraron ${meetings.length} reuniones con el meeting_id: ${meeting_id}`,
+            data: meetings,
+        });
+    } catch (error) {
+        console.error('🔥 Error al obtener todas las reuniones por meeting_id:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al obtener las reuniones',
+            error: error.message,
+        });
+    }
+};
+
 export const getGroupedDelays = async (_req, res) => {
     try {
         const data = await Meeting.getGroupedDelaysByHostId();

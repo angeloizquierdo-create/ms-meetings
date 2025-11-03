@@ -157,6 +157,35 @@ class Meeting {
         return new Meeting({ id: foundDoc.id, ...foundDoc.data() });
     }
 
+    /**
+     * NUEVO MÉTODO
+     * Busca todas las reuniones que coincidan con un meeting_id específico.
+     * @param {string | number} meetingId - El ID de la reunión de Zoom.
+     * @returns {Promise<Meeting[]>} - Un array con todas las instancias de la reunión encontradas.
+     */
+    static async getAllByMeetingId(meetingId) {
+        if (!meetingId) {
+            return [];
+        }
+
+        const meetingIdAsNumber = Number(meetingId);
+        const meetingIdAsString = String(meetingId);
+
+        const query = Meeting.collection().where('meeting_id', 'in', [meetingIdAsNumber, meetingIdAsString]);
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            return [];
+        }
+
+        const meetings = [];
+        snapshot.forEach(doc => {
+            meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
+        });
+
+        return meetings;
+    }
+
     async save() {
         const dataToSave = { ...this };
         delete dataToSave.id;

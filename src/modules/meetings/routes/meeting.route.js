@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import { 
     saveMeeting,
@@ -5,6 +6,7 @@ import {
     getAllMeetings,
     getMeetingById,
     getMeetingByMeetingId,
+    getAllMeetingsByMeetingId, // 1. Importar el nuevo controlador
     getGroupedDelays,
     getTopDelayedHosts,
     updateMeetingStatusById,
@@ -36,6 +38,11 @@ MeetingRouter.patch('/update/by-occurrence-id/:occurrence_id', updateMeetingByOc
 MeetingRouter.patch('/status/by-occurrence-id/:occurrence_id', updateMeetingStatusByOccurrenceId);
 MeetingRouter.get('/all', getAllMeetings);
 MeetingRouter.patch('/status/:meeting_id', updateMeetingStatusById);
+
+// --- NUEVA RUTA ---
+// Obtiene TODAS las reuniones recurrentes por su meeting_id
+MeetingRouter.get('/all/by-meeting-id/:meeting_id', getAllMeetingsByMeetingId);
+
 MeetingRouter.get('/:id', getMeetingById);
 MeetingRouter.get('/by-meeting-id/:meeting_id', getMeetingByMeetingId);
 
