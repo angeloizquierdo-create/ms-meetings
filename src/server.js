@@ -1,3 +1,4 @@
+
 import express from 'express';
 import morgan from 'morgan';
 import corsMiddleware from './middleware/cors.js';
@@ -5,6 +6,7 @@ import MeetingRouter from './modules/meetings/routes/meeting.route.js';
 import ParticipantRouter from './modules/participants/routes/participant.route.js';
 import RatingRouter from './modules/ratings/routers/rating.router.js';
 import UserRouter from './modules/users/routers/user.route.js';
+import HealthRouter from './modules/health/routes/health.routes.js'; // 1. Importar la nueva ruta
 
 class Server {
     constructor() {
@@ -16,6 +18,7 @@ class Server {
         this.participant_path = '/ms/v1/participant';
         this.rating_path = '/ms/v1/rating';
         this.user_path = '/ms/v1/user';
+        this.health_path = '/ms/v1/health'; // 2. Definir el path para la nueva ruta
 
         this.middlewares();
         this.routes();
@@ -37,6 +40,7 @@ class Server {
         this.app.use(this.participant_path, ParticipantRouter);
         this.app.use(this.rating_path, RatingRouter);
         this.app.use(this.user_path, UserRouter);
+        this.app.use(this.health_path, HealthRouter); // 3. Usar la nueva ruta
     }
 
     listen() {
