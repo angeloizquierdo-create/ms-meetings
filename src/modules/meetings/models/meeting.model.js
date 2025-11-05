@@ -17,6 +17,7 @@ class Meeting {
         host_id,
         host_email,
         occurrence_id,
+        limit_month = null, // 1. Valor por defecto cambiado a null para un string
         delay = false,
         delay_min = 0,
         summary = null,
@@ -33,6 +34,7 @@ class Meeting {
         this.host_id = host_id;
         this.host_email = host_email;
         this.occurrence_id = occurrence_id || null;
+        this.limit_month = limit_month; // 2. Asignación del valor (esto se mantiene)
         this.delay = delay || false;
         this.delay_min = delay_min || 0;
         this.summary = summary;
@@ -59,6 +61,7 @@ class Meeting {
             host_email: obj?.host_email,
             occurrence_id: obj?.occurrence_id,
             summary: obj?.summary || null,
+            limit_month: null, // 3. Valor por defecto cambiado a null al crear desde Zoom
         });
     }
     
