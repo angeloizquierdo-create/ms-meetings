@@ -314,6 +314,35 @@ export const getAllMeetings = async (_req, res) => {
     }
 };
 
+export const getMeetingsByStatus = async (req, res) => {
+    try {
+        const { status } = req.params;
+
+        if (!status) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'El status no fue proporcionado en la URL',
+            });
+        }
+
+        const meetings = await Meeting.getAllByStatus(status);
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Se encontraron ${meetings.length} reuniones con el status: ${status}`,
+            data: meetings,
+        });
+
+    } catch (error) {
+        console.error(`🔥 Error al obtener reuniones por status (${status}):`, error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al obtener las reuniones por status',
+            error: error.message,
+        });
+    }
+};
+
 export const getMeetingsGroupedByStatus = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 20;
@@ -480,10 +509,6 @@ export const getMeetingByMeetingId = async (req, res) => {
     }
 };
 
-/**
- * NUEVO CONTROLADOR
- * Busca y devuelve todas las reuniones que comparten el mismo meeting_id.
- */
 export const getAllMeetingsByMeetingId = async (req, res) => {
     try {
         const { meeting_id } = req.params;
@@ -514,6 +539,39 @@ export const getAllMeetingsByMeetingId = async (req, res) => {
         return res.status(500).json({
             status: 'error',
             message: 'Ocurrió un error al obtener las reuniones',
+            error: error.message,
+        });
+    }
+};
+
+/**
+ * NUEVO CONTROLADOR
+ * Verifica si existe una reunión que coincida con un meeting_id y occurrence_id específicos.
+ */
+export const checkMeetingExists = async (req, res) => {
+    try {
+        const { meeting_id, occurrence_id } = req.params;
+
+        if (!meeting_id || !occurrence_id) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Tanto meeting_id como occurrence_id son requeridos en la URL',
+            });
+        }
+
+        const meetingDoc = await Meeting.findByMeetingAndOccurrenceId(meeting_id, occurrence_id);
+
+        // Devolvemos un booleano simple indicando si existe o no
+        return res.status(200).json({
+            status: 'ok',
+            exists: !!meetingDoc, // Convierte el resultado (documento o null) a true/false
+        });
+
+    } catch (error) {
+        console.error('🔥 Error al verificar la existencia de la reunión:', error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error interno al verificar la reunión',
             error: error.message,
         });
     }

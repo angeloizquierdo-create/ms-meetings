@@ -6,7 +6,8 @@ import {
     getAllMeetings,
     getMeetingById,
     getMeetingByMeetingId,
-    getAllMeetingsByMeetingId, // 1. Importar el nuevo controlador
+    getAllMeetingsByMeetingId, 
+    getMeetingsByStatus, // 1. Importar el nuevo controlador
     getGroupedDelays,
     getTopDelayedHosts,
     updateMeetingStatusById,
@@ -18,7 +19,8 @@ import {
     updateMeetingByMeetingId,
     updateMeetingByOccurrenceId,
     updateMeetingStatusByOccurrenceId,
-    updateMeetingSummaryByOccurrenceId
+    updateMeetingSummaryByOccurrenceId,
+    checkMeetingExists
 } from '../controllers/meeting.controller.js';
 
 const MeetingRouter = Router();
@@ -38,10 +40,13 @@ MeetingRouter.patch('/update/by-occurrence-id/:occurrence_id', updateMeetingByOc
 MeetingRouter.patch('/status/by-occurrence-id/:occurrence_id', updateMeetingStatusByOccurrenceId);
 MeetingRouter.get('/all', getAllMeetings);
 MeetingRouter.patch('/status/:meeting_id', updateMeetingStatusById);
-
-// --- NUEVA RUTA ---
-// Obtiene TODAS las reuniones recurrentes por su meeting_id
 MeetingRouter.get('/all/by-meeting-id/:meeting_id', getAllMeetingsByMeetingId);
+
+// --- NUEVA RUTA DE VERIFICACIÓN ---
+MeetingRouter.get('/check-existence/:meeting_id/:occurrence_id', checkMeetingExists);
+
+// --- NUEVA RUTA POR STATUS ---
+MeetingRouter.get('/by-status/:status', getMeetingsByStatus);
 
 MeetingRouter.get('/:id', getMeetingById);
 MeetingRouter.get('/by-meeting-id/:meeting_id', getMeetingByMeetingId);

@@ -160,12 +160,6 @@ class Meeting {
         return new Meeting({ id: foundDoc.id, ...foundDoc.data() });
     }
 
-    /**
-     * NUEVO MÉTODO
-     * Busca todas las reuniones que coincidan con un meeting_id específico.
-     * @param {string | number} meetingId - El ID de la reunión de Zoom.
-     * @returns {Promise<Meeting[]>} - Un array con todas las instancias de la reunión encontradas.
-     */
     static async getAllByMeetingId(meetingId) {
         if (!meetingId) {
             return [];
@@ -175,6 +169,32 @@ class Meeting {
         const meetingIdAsString = String(meetingId);
 
         const query = Meeting.collection().where('meeting_id', 'in', [meetingIdAsNumber, meetingIdAsString]);
+        const snapshot = await query.get();
+
+        if (snapshot.empty) {
+            return [];
+        }
+
+        const meetings = [];
+        snapshot.forEach(doc => {
+            meetings.push(new Meeting({ id: doc.id, ...doc.data() }));
+        });
+
+        return meetings;
+    }
+
+    /**
+     * NUEVO MÉTODO
+     * Busca todas las reuniones que coincidan con un status específico.
+     * @param {string} status - El estado de la reunión (ej: "pending", "started").
+     * @returns {Promise<Meeting[]>} - Un array con todas las reuniones encontradas.
+     */
+    static async getAllByStatus(status) {
+        if (!status) {
+            return [];
+        }
+
+        const query = Meeting.collection().where('status', '==', status);
         const snapshot = await query.get();
 
         if (snapshot.empty) {
