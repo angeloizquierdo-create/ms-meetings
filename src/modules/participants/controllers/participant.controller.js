@@ -11,6 +11,12 @@ export const saveParticipant = async (req, res) => {
             return res.status(400).json({ error: 'Payload inválido o faltante. Se esperaba req.body.payload.object.' });
         }
 
+        // LÓGICA DE ROBUSTEZ: Si participant_user_id es nulo, usar user_id como fallback.
+        if (!participantData.participant_user_id) {
+            console.log(`⚠️ participant_user_id no encontrado. Usando user_id como fallback: ${participantData.user_id}`);
+            participantData.participant_user_id = participantData.user_id;
+        }
+
         const { participant, created } = await Participant.findOrCreate(participantData);
 
         if (participant.is_host && created) {
