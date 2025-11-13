@@ -40,8 +40,18 @@ class Participant {
         }
 
         const newParticipant = Participant.fromZoomPayload(participantData);
-        const { data, error } = await supabase.from('participants').insert([newParticipant]);
-        if (error) throw new Error(error.message);
+
+        // Create a plain object for insertion, excluding the 'id' property.
+        // The database will generate the 'id' automatically.
+        const { id, ...insertData } = newParticipant;
+
+        const { data, error } = await supabase.from('participants').insert([insertData]).select();
+
+        if (error) {
+            console.error("Error inserting participant:", error);
+            throw new Error(error.message);
+        }
+
         return { participant: data[0], created: true };
     }
 
