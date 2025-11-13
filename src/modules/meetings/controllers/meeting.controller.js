@@ -14,7 +14,16 @@ export const saveMeeting = async (req, res) => {
             return res.status(400).json({ error: 'Payload inválido o meeting ID no encontrado' });
         }
 
-        const { id: meeting_id, host_id, topic, start_time } = meetingData;
+        const { 
+            id: meeting_id, 
+            host_id, 
+            topic, 
+            start_time,
+            uuid,
+            host_email,
+            duration,
+            join_url
+        } = meetingData;
 
         // LÓGICA MEJORADA: Buscar el occurrence_id en dos posibles ubicaciones
         let occurrence_id;
@@ -32,26 +41,34 @@ export const saveMeeting = async (req, res) => {
             return res.status(400).json({ error: 'Payload inválido: El host_id es requerido y no fue encontrado.' });
         }
 
-        const existingMeeting = await Meeting.findByMeetingAndOccurrenceId(meeting_id, occurrence_id);
-        if (existingMeeting) {
-            return res.status(200).json({
-                status: 'ok',
-                message: 'La reunión ya existe, no se realizaron cambios.',
-                data: existingMeeting
-            });
-        }
-        
-        const meetingToCreate = {
+        const dataToSave = {
             meeting_id,
             occurrence_id,
             host_id,
             topic,
             start_time,
+            uuid,
+            host_email,
+            duration,
+            join_url,
             status: 'pending',
             created_at: new Date().toISOString(),
         };
 
-        const createdMeeting = await Meeting.create(meetingToCreate);
+        const existingMeeting = await Meeting.findByMeetingAndOccurrenceId(meeting_id, occurrence_id);
+        
+        if (existingMeeting) {
+            // La reunión existe, actualízala con la nueva información
+            const updatedMeeting = await Meeting.updateMeetingByOccurrenceId(occurrence_id, meeting_id, dataToSave);
+            return res.status(200).json({
+                status: 'ok',
+                message: 'La reunión ya existía y ha sido actualizada.',
+                data: updatedMeeting
+            });
+        }
+        
+        // La reunión no existe, créala
+        const createdMeeting = await Meeting.create(dataToSave);
 
         return res.status(201).json({
             status: 'ok',
