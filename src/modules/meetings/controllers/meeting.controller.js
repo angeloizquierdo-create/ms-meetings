@@ -14,8 +14,25 @@ export const saveMeeting = async (req, res) => {
             return res.status(400).json({ error: 'Payload inválido o meeting ID no encontrado' });
         }
 
-        const { id: meeting_id, occurrences, host_id, topic, start_time } = meetingData;
-        const occurrence_id = occurrences?.[0]?.occurrence_id;
+        const { id: meeting_id, host_id, topic, start_time } = meetingData;
+
+        // LÓGICA MEJORADA: Buscar el occurrence_id en dos posibles ubicaciones
+        let occurrence_id;
+        if (meetingData.occurrence_id) {
+            // Opción 1: El ID viene en el nivel superior del objeto
+            occurrence_id = meetingData.occurrence_id;
+        } else if (Array.isArray(meetingData.occurrences) && meetingData.occurrences.length > 0) {
+            // Opción 2: El ID viene dentro de un arreglo de ocurrencias
+            occurrence_id = meetingData.occurrences[0]?.occurrence_id;
+        }
+
+        // VALIDACIÓN: Asegurarse de que se encontró el occurrence_id y el host_id
+        if (!occurrence_id) {
+            return res.status(400).json({ error: 'Payload inválido: No se pudo encontrar el occurrence_id en los datos recibidos.' });
+        }
+        if (!host_id) {
+            return res.status(400).json({ error: 'Payload inválido: El host_id es requerido y no fue encontrado.' });
+        }
 
         // 1. Verificar si la reunión ya existe
         const existingMeeting = await Meeting.findByMeetingAndOccurrenceId(meeting_id, occurrence_id);
