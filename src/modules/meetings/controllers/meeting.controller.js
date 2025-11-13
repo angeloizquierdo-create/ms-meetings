@@ -10,13 +10,19 @@ export const saveMeeting = async (req, res) => {
 
         if (!payload || !payload.object) return res.status(400).json({ error: 'Payload inválido' });
 
-        const meeting = Meeting.fromZoomPayload(payload);
-        await meeting.save();
+        const data = await Meeting.checkAndCreateMeeting(payload);
+
+        if (data === null) {
+            return res.status(200).json({
+                status: 'ok',
+                message: 'La reunión ya existe, no se realizaron cambios.'
+            });
+        }
 
         return res.status(201).json({
             status: 'ok',
             message: 'Reunión guardada exitosamente',
-            data: meeting
+            data
         });
     } catch (error) {
         console.error('🔥 Error al guardar la reunión:', error);

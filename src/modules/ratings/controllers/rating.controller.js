@@ -1,3 +1,4 @@
+
 import Rating from '../models/rating.model.js';
 import { CreateRatingValidator } from '../validators/rating.validator.js';
 
@@ -13,8 +14,7 @@ export const saveRating = async (req, res) => {
             });
         }
 
-        const rating = Rating.fromPayload(value);
-        await rating.save();
+        const rating = await Rating.fromPayload(value).save();
 
         return res.status(201).json({
             status: 'ok',
@@ -52,11 +52,9 @@ export const getRatingsByHostId = async (req, res) => {
             });
         }
 
-        // Calcular promedio
         const total = ratings.reduce((acc, r) => acc + (r.score || 0), 0);
         const average = parseFloat((total / ratings.length).toFixed(2));
 
-        // Retornar solo un objeto por host con el promedio
         const result = {
             host_id,
             score_avg: average,
@@ -167,7 +165,6 @@ export const getAverageScoreByMeetingId = async (req, res) => {
             });
         }
 
-        // Llamar al método del modelo
         const average = await Rating.getAverageByMeetingId(meeting_id);
 
         if (average === null) {
