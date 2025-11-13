@@ -22,7 +22,8 @@ export const saveMeeting = async (req, res) => {
             uuid,
             host_email,
             duration,
-            join_url
+            join_url,
+            start_url
         } = meetingData;
 
         // LÓGICA MEJORADA: Buscar el occurrence_id en dos posibles ubicaciones
@@ -51,6 +52,7 @@ export const saveMeeting = async (req, res) => {
             host_email,
             duration,
             join_url,
+            start_url,
             status: 'pending',
             created_at: new Date().toISOString(),
         };
