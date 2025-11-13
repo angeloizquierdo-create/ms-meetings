@@ -19,10 +19,8 @@ export const saveMeeting = async (req, res) => {
         // LÓGICA MEJORADA: Buscar el occurrence_id en dos posibles ubicaciones
         let occurrence_id;
         if (meetingData.occurrence_id) {
-            // Opción 1: El ID viene en el nivel superior del objeto
             occurrence_id = meetingData.occurrence_id;
         } else if (Array.isArray(meetingData.occurrences) && meetingData.occurrences.length > 0) {
-            // Opción 2: El ID viene dentro de un arreglo de ocurrencias
             occurrence_id = meetingData.occurrences[0]?.occurrence_id;
         }
 
@@ -34,7 +32,6 @@ export const saveMeeting = async (req, res) => {
             return res.status(400).json({ error: 'Payload inválido: El host_id es requerido y no fue encontrado.' });
         }
 
-        // 1. Verificar si la reunión ya existe
         const existingMeeting = await Meeting.findByMeetingAndOccurrenceId(meeting_id, occurrence_id);
         if (existingMeeting) {
             return res.status(200).json({
@@ -43,28 +40,17 @@ export const saveMeeting = async (req, res) => {
                 data: existingMeeting
             });
         }
-
-        // 2. Formatear la fecha/hora al formato que la BD espera (ISO 8601)
-        let formattedStartTime = start_time;
-        if (formattedStartTime && typeof formattedStartTime === 'string' && formattedStartTime.includes('/')) {
-            const parts = formattedStartTime.split(', ');
-            const dateParts = parts[0].split('/');
-            const [day, month, year] = dateParts;
-            formattedStartTime = `${year}-${month}-${day}T${parts[1]}:00`;
-        }
-
-        // 3. Preparar el objeto para la inserción (SIN el campo 'id')
+        
         const meetingToCreate = {
             meeting_id,
             occurrence_id,
             host_id,
             topic,
-            start_time: formattedStartTime,
+            start_time,
             status: 'pending',
             created_at: new Date().toISOString(),
         };
 
-        // 4. Llamar al modelo para crear la reunión
         const createdMeeting = await Meeting.create(meetingToCreate);
 
         return res.status(201).json({
