@@ -13,13 +13,30 @@ class Participant {
     }
 
     static fromZoomPayload(data) {
+        let formattedJoinTime = data.join_time;
+
+        // The error log shows a date format like "13/11/2025, 15:03".
+        // PostgreSQL expects a standard format like "YYYY-MM-DD HH:mm:ss".
+        // We will convert the custom format to an ISO 8601 string that the database understands.
+        if (formattedJoinTime && typeof formattedJoinTime === 'string' && formattedJoinTime.includes('/')) {
+            const parts = formattedJoinTime.split(', ');
+            if (parts.length === 2) {
+                const dateParts = parts[0].split('/');
+                if (dateParts.length === 3) {
+                    const [day, month, year] = dateParts;
+                    // Reformat to 'YYYY-MM-DDTHH:mm:ss' which is a valid ISO 8601 format.
+                    formattedJoinTime = `${year}-${month}-${day}T${parts[1]}:00`;
+                }
+            }
+        }
+
         return new Participant(
             null, // id is null for new participants
             data.id,
             data.meeting_id,
             data.user_id,
             data.user_name,
-            data.join_time,
+            formattedJoinTime, // Use the correctly formatted timestamp
             data.is_host
         );
     }
@@ -41,8 +58,6 @@ class Participant {
 
         const newParticipant = Participant.fromZoomPayload(participantData);
 
-        // Create a plain object for insertion, excluding the 'id' property.
-        // The database will generate the 'id' automatically.
         const { id, ...insertData } = newParticipant;
 
         const { data, error } = await supabase.from('participants').insert([insertData]).select();
@@ -54,6 +69,8 @@ class Participant {
 
         return { participant: data[0], created: true };
     }
+    
+    // ... (resto de los métodos sin cambios)
 
     static async getAllParticipants() {
         const { data, error } = await supabase.from('participants').select('*');

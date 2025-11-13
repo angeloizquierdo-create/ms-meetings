@@ -4,26 +4,58 @@ import Participant from '../../participants/models/participant.model.js';
 import Rating from '../../ratings/models/rating.model.js';
 import { parseDate } from '../../shared/utils/parseDate.js';
 
+
 export const saveMeeting = async (req, res) => {
     try {
         const payload = req.body?.payload;
+        const meetingData = payload?.object;
 
-        if (!payload || !payload.object) return res.status(400).json({ error: 'Payload inválido' });
+        if (!meetingData || !meetingData.id) {
+            return res.status(400).json({ error: 'Payload inválido o meeting ID no encontrado' });
+        }
 
-        const data = await Meeting.checkAndCreateMeeting(payload);
+        const { id: meeting_id, occurrences, host_id, topic, start_time } = meetingData;
+        const occurrence_id = occurrences?.[0]?.occurrence_id;
 
-        if (data === null) {
+        // 1. Verificar si la reunión ya existe
+        const existingMeeting = await Meeting.findByMeetingAndOccurrenceId(meeting_id, occurrence_id);
+        if (existingMeeting) {
             return res.status(200).json({
                 status: 'ok',
-                message: 'La reunión ya existe, no se realizaron cambios.'
+                message: 'La reunión ya existe, no se realizaron cambios.',
+                data: existingMeeting
             });
         }
+
+        // 2. Formatear la fecha/hora al formato que la BD espera (ISO 8601)
+        let formattedStartTime = start_time;
+        if (formattedStartTime && typeof formattedStartTime === 'string' && formattedStartTime.includes('/')) {
+            const parts = formattedStartTime.split(', ');
+            const dateParts = parts[0].split('/');
+            const [day, month, year] = dateParts;
+            formattedStartTime = `${year}-${month}-${day}T${parts[1]}:00`;
+        }
+
+        // 3. Preparar el objeto para la inserción (SIN el campo 'id')
+        const meetingToCreate = {
+            meeting_id,
+            occurrence_id,
+            host_id,
+            topic,
+            start_time: formattedStartTime,
+            status: 'pending',
+            created_at: new Date().toISOString(),
+        };
+
+        // 4. Llamar al modelo para crear la reunión
+        const createdMeeting = await Meeting.create(meetingToCreate);
 
         return res.status(201).json({
             status: 'ok',
             message: 'Reunión guardada exitosamente',
-            data
+            data: createdMeeting
         });
+
     } catch (error) {
         console.error('🔥 Error al guardar la reunión:', error);
         return res.status(500).json({
