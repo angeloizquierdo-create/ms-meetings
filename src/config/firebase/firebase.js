@@ -1,7 +1,11 @@
 import admin from 'firebase-admin';
 import fs from 'fs';
 
-const serviceAccount = JSON.parse(fs.readFileSync('./src/config/firebase/serviceAccountKey.json', 'utf8'));
+const serviceAccountPath = process.env.RENDER === 'true'
+    ? '/etc/secrets/serviceAccountKey.json'
+    : './src/config/firebase/serviceAccountKey.json';
+
+const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
