@@ -32,7 +32,7 @@ class Meeting {
         this.status = status;
         this.duration = duration;
         this.host_id = host_id;
-        this.host_email = host_email;
+        this.host_email = host_email || null;
         this.occurrence_id = occurrence_id || null;
         this.limit_month = limit_month; // 2. Asignación del valor (esto se mantiene)
         this.delay = delay || false;
@@ -58,7 +58,7 @@ class Meeting {
             status: obj?.status,
             duration: obj?.duration,
             host_id: obj?.host_id,
-            host_email: obj?.host_email,
+            host_email: obj?.host_email || null,
             occurrence_id: obj?.occurrence_id,
             summary: obj?.summary || null,
             limit_month: null, // 3. Valor por defecto cambiado a null al crear desde Zoom
@@ -87,7 +87,6 @@ class Meeting {
         
         console.log(`[DB] Se encontraron ${snapshot.docs.length} documento(s) con el meeting_id. Filtrando por occurrence_id...`);
 
-        
         const foundDoc = snapshot.docs.find(doc => {
             const data = doc.data();
             console.log(`[DB] Comparando occurrence_id: ${data.occurrence_id} == ${occurrenceId}`);

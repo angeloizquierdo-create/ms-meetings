@@ -65,7 +65,7 @@ class Rating {
             }
         });
 
-        if (count === 0) return null;
+        if (.count === 0) return null;
 
         const average = totalScore / count;
         return parseFloat(average.toFixed(2));
