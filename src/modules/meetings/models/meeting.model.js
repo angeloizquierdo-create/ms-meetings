@@ -87,6 +87,7 @@ class Meeting {
         
         console.log(`[DB] Se encontraron ${snapshot.docs.length} documento(s) con el meeting_id. Filtrando por occurrence_id...`);
 
+        
         const foundDoc = snapshot.docs.find(doc => {
             const data = doc.data();
             console.log(`[DB] Comparando occurrence_id: ${data.occurrence_id} == ${occurrenceId}`);
