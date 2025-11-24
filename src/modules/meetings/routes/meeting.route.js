@@ -48,7 +48,7 @@ MeetingRouter.get('/check-existence/:meeting_id/:occurrence_id', checkMeetingExi
 // --- NUEVA RUTA POR STATUS ---
 MeetingRouter.get('/by-status/:status', getMeetingsByStatus);
 
-MeetingRouter.get('/:id', getMeetingById);
 MeetingRouter.get('/by-meeting-id/:meeting_id', getMeetingByMeetingId);
+MeetingRouter.get('/:id', getMeetingById);
 
 export default MeetingRouter;
