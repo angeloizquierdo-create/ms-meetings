@@ -343,6 +343,27 @@ export const getMeetingsByStatus = async (req, res) => {
     }
 };
 
+export const getMeetingsByFilters = async (req, res) => {
+    try {
+        const filters = req.query;
+        const meetings = await Meeting.getAllByFilters(filters);
+
+        return res.status(200).json({
+            status: 'ok',
+            message: `Se encontraron ${meetings.length} reuniones con los filtros aplicados`,
+            data: meetings,
+        });
+
+    } catch (error) {
+        console.error(`🔥 Error al obtener reuniones por filtros:`, error);
+        return res.status(500).json({
+            status: 'error',
+            message: 'Ocurrió un error al obtener las reuniones por filtros',
+            error: error.message,
+        });
+    }
+};
+
 export const getMeetingsGroupedByStatus = async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 20;

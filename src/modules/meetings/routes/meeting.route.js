@@ -8,6 +8,7 @@ import {
     getMeetingByMeetingId,
     getAllMeetingsByMeetingId, 
     getMeetingsByStatus, // 1. Importar el nuevo controlador
+    getMeetingsByFilters, // Importar el nuevo controlador de filtros
     getGroupedDelays,
     getTopDelayedHosts,
     updateMeetingStatusById,
@@ -24,6 +25,9 @@ import {
 } from '../controllers/meeting.controller.js';
 
 const MeetingRouter = Router();
+
+// --- NUEVA RUTA DE FILTROS ---
+MeetingRouter.get('/filter', getMeetingsByFilters);
 
 MeetingRouter.get('/get-hosts-more-info', getHostsMoreInfo)
 MeetingRouter.get('/last', getMeetingsGroupedByStatus);

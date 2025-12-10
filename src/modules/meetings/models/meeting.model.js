@@ -183,18 +183,26 @@ class Meeting {
         return meetings;
     }
 
-    /**
-     * NUEVO MÉTODO
-     * Busca todas las reuniones que coincidan con un status específico.
-     * @param {string} status - El estado de la reunión (ej: "pending", "started").
-     * @returns {Promise<Meeting[]>} - Un array con todas las reuniones encontradas.
-     */
-    static async getAllByStatus(status) {
-        if (!status) {
-            return [];
+    static async getAllByFilters(filters) {
+        let query = Meeting.collection();
+
+        for (const key in filters) {
+            if (Object.prototype.hasOwnProperty.call(filters, key)) {
+                let value = filters[key];
+
+                // Manejo especial para valores 'true', 'false' y 'null'
+                if (value === 'true') {
+                    value = true;
+                } else if (value === 'false') {
+                    value = false;
+                } else if (value === 'null') {
+                    value = null;
+                }
+
+                query = query.where(key, '==', value);
+            }
         }
 
-        const query = Meeting.collection().where('status', '==', status);
         const snapshot = await query.get();
 
         if (snapshot.empty) {
