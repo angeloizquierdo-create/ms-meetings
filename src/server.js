@@ -14,7 +14,7 @@ class Server {
         // Usar el puerto de la variable de entorno o 3000 como fallback
         this.port = process.env.PORT || 3000;
 
-        this.meeting_path = '/ms/v1/meeting';
+        this.meeting_path = '/ms/v1/meetings'; // Corregido de /meeting a /meetings
         this.participant_path = '/ms/v1/participant';
         this.rating_path = '/ms/v1/rating';
         this.user_path = '/ms/v1/user';
@@ -25,7 +25,10 @@ class Server {
     }
 
     middlewares() {
-        this.app.use(express.json());
+        // Aumentar el límite del tamaño del payload a 50mb
+        this.app.use(express.json({ limit: '50mb' }));
+        this.app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
         this.app.use(corsMiddleware);
         this.app.use(morgan('dev'));
     }
