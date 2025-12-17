@@ -21,8 +21,7 @@ import {
     updateMeetingByOccurrenceId,
     updateMeetingStatusByOccurrenceId,
     updateMeetingSummaryByOccurrenceId,
-    checkMeetingExists,
-    getStartedMeetings
+    checkMeetingExists
 } from '../controllers/meeting.controller.js';
 
 const MeetingRouter = Router();
@@ -52,9 +51,6 @@ MeetingRouter.get('/check-existence/:meeting_id/:occurrence_id', checkMeetingExi
 
 // --- NUEVA RUTA POR STATUS ---
 MeetingRouter.get('/by-status/:status', getMeetingsByStatus);
-
-// --- NUEVA RUTA PARA REUNIONES COMENZADAS ---
-MeetingRouter.get('/started', getStartedMeetings);
 
 MeetingRouter.get('/by-meeting-id/:meeting_id', getMeetingByMeetingId);
 MeetingRouter.get('/:id', getMeetingById);
